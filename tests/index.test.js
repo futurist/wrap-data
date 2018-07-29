@@ -28,6 +28,10 @@ it('flyd stream', () => {
   it(d().a()).equals(1)
   it(typeof d().b()).equals('object')
   it(d().b().c()).equals(2)
+  
+  it(d.root).equals(d)
+  it(d().b().c.root).equals(d)
+
 })
 
 
@@ -196,4 +200,4 @@ it('circle object test', () => {
 
 
 
-// it.run()
+it.run()

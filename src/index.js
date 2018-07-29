@@ -35,12 +35,14 @@ function isPrimitive2(val) {
 function wrapData(wrapper, callback) {
 
   let finished = 0
+  let root
   let cb = (val, type) => finished && isFunction(callback) && callback(val, type)
 
   return source => createWrap(source)
 
   function bindMethods(packer, path, type='change') {
     // type: 0->CHANGE, 1->ADD, 2->DELETE
+    packer.root = root
     packer.path = path
     packer.map(v => cb(packer, type))
     type = 'change'
@@ -53,15 +55,19 @@ function wrapData(wrapper, callback) {
   }
 
   function createWrap(source, prevPath = [], _cache) {
-    let packer
+    let packer = wrapper()
+    const isRoot = _cache == null
+    if (isRoot) {
+      _cache = [[source, packer, null]]
+      root = packer
+    }
+
     if (isPrimitive2(source)) {
       packer = bindMethods(wrapper(source), [])
       return packer
     }
-    packer = wrapper()
+    
     const target = isArray(source) ? [] : isPOJO(source) ? {} : source
-    const isRoot = _cache == null
-    if (isRoot) _cache = [[source, packer, null]]
     packer(deepIt(target, source, (a, b, key, path, _cache) => {
       const _path = path.concat(key)
       const bval = b[key]
