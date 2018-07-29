@@ -1,0 +1,17 @@
+{
+  "name": "wrap-data",
+  "version": "0.1.0",
+  "description": "wrap-data",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "ospec"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "flyd": "^0.2.8",
+    "mithril-stream": "^1.1.0",
+    "ospec": "^3.0.1"
+  },
+  "dependencies": {}
+}
