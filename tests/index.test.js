@@ -101,9 +101,9 @@ it('object test', () => {
 
   d.set('a.x.y', 34)
   it(spy.callCount).equals(1)
-  it(spy.args[0]()).deepEquals(34)
-  it(spy.args[0].path.join()).deepEquals('a,x,y')
-  it(spy.args[1]).equals('add')  // 1: ADD
+  it(spy.args[0].value()).deepEquals(34)
+  it(spy.args[0].value.path.join()).deepEquals('a,x,y')
+  it(spy.args[0].type).equals('add')  // 1: ADD
 
   d.set('a.x.f', mithirlStream(mithirlStream(35)))
   it(spy.callCount).equals(2)
@@ -119,7 +119,7 @@ it('object test', () => {
   // but set can
   d.set('a.x.y', 3)
   it(spy.callCount).equals(3)
-  it(spy.args[1]).equals('change')  // 0: CHANGE
+  it(spy.args[0].type).equals('change')  // 0: CHANGE
   it(ss()).equals(3)
 
   try{
@@ -143,8 +143,8 @@ it('object test', () => {
 
   d.unset('a.x.y')
   it(spy.callCount).equals(7)
-  it(spy.args[0].path.join()).equals('a,x,y')
-  it(spy.args[1]).equals('delete')
+  it(spy.args[0].value.path.join()).equals('a,x,y')
+  it(spy.args[0].type).equals('delete')
 
   it(d.get('a.x.y')).equals(undefined)
 

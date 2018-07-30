@@ -36,7 +36,7 @@ function wrapData(wrapper, callback) {
 
   let finished = 0
   let root
-  let cb = (val, type) => finished && isFunction(callback) && callback(val, type)
+  let cb = (value, type) => finished && isFunction(callback) && callback({value, type})
 
   return source => createWrap(source)
 
