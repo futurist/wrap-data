@@ -130,31 +130,43 @@ it('object test', () => {
   }
   it(err instanceof Error).equals(true)
   // failed, but still callback
-  it(spy.callCount).equals(4)
+  it(spy.callCount).equals(3)
 
   // success ensured set
   var xy = d.ensure('a.x.z', 234)
-  it(spy.callCount).equals(5)
+  it(spy.callCount).equals(4)
   it(xy()).equals(234)
 
   d.set('a.x.y', 199)
-  it(spy.callCount).equals(6)
+  it(spy.callCount).equals(5)
   it(d.get('a.x').get('y')()).equals(199)
 
   d.unset('a.x.y')
-  it(spy.callCount).equals(7)
+  it(spy.callCount).equals(6)
   it(spy.args[0].value.path.join()).equals('a,x,y')
   it(spy.args[0].type).equals('delete')
 
   it(d.get('a.x.y')).equals(undefined)
 
+  
+  d.set('a.x.y', {xx:2})
+  it(d.get('a.x.y.xx').path.join()).equals('a,x,y,xx')
+  it(d.get('a.x.y.xx')()).equals(2)
+  it(d().a().x().y().xx()).equals(2)
+
+  d.set('a.y.4', {yy:{zz:234}})
+  it(d.get('a.y')().length).equals(5)
+  it(d.get('a.y.4.yy').path.join()).equals('a,y,4,yy')
+  it(d.get('a.y.4.yy.zz').path.join()).equals('a,y,4,yy,zz')
+  it(d.get('a.y.4.yy.zz')()).equals(234)
+
   it(d.unwrap()).deepEquals({ a: 
     { i: 99,
       b: 1,
       v: 10,
-      y: [ 3, 4, 5, 6 ],
+      y: [ 3, 4, 5, 6, {yy: {zz: 234}} ],
       c: { d: 3 },
-      x: { f: 35, z: 234 } } })
+      x: { f: 35, z: 234, y: {xx:2} } } })
 
 })
 

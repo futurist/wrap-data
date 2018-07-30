@@ -36,9 +36,10 @@ function wrapData(wrapper, callback) {
 
   let finished = 0
   let root
+  let _cache = null
   let cb = (value, type) => finished && isFunction(callback) && callback({value, type})
 
-  return source => createWrap(source)
+  return source => createWrap(source, [])
 
   function bindMethods(packer, path, type='change') {
     if(path in packer && root in packer) return packer
@@ -55,7 +56,7 @@ function wrapData(wrapper, callback) {
     return packer
   }
 
-  function createWrap(source, prevPath = [], _cache) {
+  function createWrap(source, prevPath = []) {
     let packer = wrapper()
     const isRoot = _cache == null
     if (isRoot) {
@@ -64,12 +65,12 @@ function wrapData(wrapper, callback) {
     }
 
     if (isPrimitive2(source)) {
-      packer = bindMethods(wrapper(source), [])
+      packer = bindMethods(wrapper(source), prevPath)
       return packer
     }
     
     const target = isArray(source) ? [] : isPOJO(source) ? {} : source
-    packer(deepIt(target, source, (a, b, key, path, _cache) => {
+    packer(deepIt(target, source, (a, b, key, path) => {
       const _path = path.concat(key)
       const bval = b[key]
       if (bval === undefined) a[key] = wrapper()
@@ -90,7 +91,7 @@ function wrapData(wrapper, callback) {
       if (a[key] != null) {
         bindMethods(a[key], _path)
       }
-    }, prevPath, _cache))
+    }, prevPath))
     
     const ret = bindMethods(packer, prevPath)
 
@@ -106,10 +107,10 @@ function wrapData(wrapper, callback) {
   }
 
 
-  function deepIt(a, b, callback, path, _cache) {
+  function deepIt(a, b, callback, path) {
     _cache = isArray(_cache) ? _cache : []
     path = isArray(path) ? path : []
-    if (isPrimitive2(b)) return wrapper(a)
+    if (isPrimitive2(b)) return bindMethods(wrapper(a), path)
     for (let key in b) {
       if (!hasOwnProperty.call(b, key)) continue
       // return false stop the iteration
@@ -123,7 +124,7 @@ function wrapData(wrapper, callback) {
         if (prev == null) {
           const _path = path.concat(key)
           _cache.push([bval, a, key])
-          deepIt(aval(), bval, callback, _path, _cache)
+          deepIt(aval(), bval, callback, _path)
         } else {
           // recursive found
         }
@@ -170,14 +171,20 @@ function wrapData(wrapper, callback) {
       }
       n = n[p]()
     }
-    finished = 1
     p = path[i]
+    let val, action
     if(isWrapper(n[p])){
-      n[p](value)
+      val = n[p](createWrap(value, path.slice())())
+      action = 'change'
     } else {
-      n[p] = bindMethods(wrapper(value), path.slice(), 'add')
+      val = n[p] = createWrap(value, path.slice())
+      // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
+      action = 'add'
     }
-    return n[p]
+    finished = 1
+    cb(val, action)
+
+    return val
   }
 
   function unset(path) {
