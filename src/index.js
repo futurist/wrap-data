@@ -195,9 +195,15 @@ function wrapData(wrapper, callback) {
     if (!isWrapper(obj) || !len) return
     let val = obj.get(path.slice(0, -1))
     if (val == null) return
+    let parent = val()
     let p = path[len - 1]
-    let deleteVal = val()[p]
-    let result = delete val()[p]
+    let deleteVal = parent[p]
+    let result
+    if(isArray(parent) && !isNaN(p)) {
+      result = parent.splice(p, 1)
+    } else {
+      result = delete parent[p]
+    }
     cb(deleteVal, 'delete')
     return result
   }

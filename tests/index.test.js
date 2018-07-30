@@ -160,11 +160,13 @@ it('object test', () => {
   it(d.get('a.y.4.yy.zz').path.join()).equals('a,y,4,yy,zz')
   it(d.get('a.y.4.yy.zz')()).equals(234)
 
+  d.unset('a.y.3')
+
   it(d.unwrap()).deepEquals({ a: 
     { i: 99,
       b: 1,
       v: 10,
-      y: [ 3, 4, 5, 6, {yy: {zz: 234}} ],
+      y: [ 3, 4, 5, {yy: {zz: 234}} ],
       c: { d: 3 },
       x: { f: 35, z: 234, y: {xx:2} } } })
 
