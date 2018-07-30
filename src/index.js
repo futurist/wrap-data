@@ -8,7 +8,7 @@ var { isArray } = Array
 // https://github.com/sindresorhus/is-plain-obj
 function isPOJO(x) {
   var prototype;
-	return toString.call(x) === '[object Object]' && (prototype = Object.getPrototypeOf(x), prototype === null || prototype === Object.getPrototypeOf({}));
+	return toString.call(x) === '[object Object]' && (prototype = getPrototypeOf(x), prototype === null || prototype === getPrototypeOf({}));
 }
 
 function isFunction(obj) {
@@ -274,12 +274,4 @@ function wrapData(wrapper, callback) {
 }
 
 module.exports = wrapData
-
-const stream = require('mithril-stream')
-const cb = v=>{
-  console.log(v.type)
-}
-const w = wrapData(stream, cb)
-const d = w({a:[]})
-d().a(1)
 
