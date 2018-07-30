@@ -41,6 +41,7 @@ function wrapData(wrapper, callback) {
   return source => createWrap(source)
 
   function bindMethods(packer, path, type='change') {
+    if(path in packer && root in packer) return packer
     // type: 0->CHANGE, 1->ADD, 2->DELETE
     packer.root = root
     packer.path = path

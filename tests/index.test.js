@@ -199,5 +199,5 @@ it('circle object test', () => {
 })
 
 
+if(require.main === module) it.run()
 
-it.run()
