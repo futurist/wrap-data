@@ -42,7 +42,7 @@ function wrapData(wrapper, callback) {
   return source => createWrap(source, [])
 
   function bindMethods(packer, path, type='change') {
-    if(path in packer && root in packer) return packer
+    if('path' in packer && 'root' in packer) return packer
     // type: 0->CHANGE, 1->ADD, 2->DELETE
     packer.root = root
     packer.path = path
@@ -274,3 +274,12 @@ function wrapData(wrapper, callback) {
 }
 
 module.exports = wrapData
+
+const stream = require('mithril-stream')
+const cb = v=>{
+  console.log(v.type)
+}
+const w = wrapData(stream, cb)
+const d = w({a:[]})
+d().a(1)
+

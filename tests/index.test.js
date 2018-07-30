@@ -49,6 +49,13 @@ it('not dive into stream', ()=>{
   })
 })
 
+it('array set test', () => {
+  var spy = it.spy()
+  var x = wrapData(mithirlStream, spy)({a:[]})
+  x().a([])
+  it(spy.callCount).equals(1)
+})
+
 it('object test', () => {
   var xa = {
     i: mithirlStream(mithirlStream(99)),
@@ -203,7 +210,7 @@ it('circle object test', () => {
 
   it(keys(d()).join()).equals('a')
   it(keys(d().a()).join()).equals('b,y,a,c')
-  it((d().a().c().c().c().b.path).join()).equals('a,y,3')
+  it((d().a().c().c().c().b.path).join()).equals('a,b')
   it(keys(d().a().c().c().c().b()).join()).equals('d')
   it(d().a().y()[3]().d.path.join()).equals('a,b,d')
   it(keys(d().a().y()[3]()).join()).equals('d')
