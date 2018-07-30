@@ -2,7 +2,9 @@
   "name": "wrap-data",
   "version": "0.1.1",
   "description": "wrap-data",
-  "main": "src/index.js",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
+  "browser": "dist/index.umd.js",
   "scripts": {
     "test": "ospec"
   },
@@ -11,7 +13,9 @@
   "devDependencies": {
     "flyd": "^0.2.8",
     "mithril-stream": "^1.1.0",
-    "ospec": "^3.0.1"
+    "ospec": "^3.0.1",
+    "rollup": "^0.63.4",
+    "rollup-plugin-buble": "^0.19.2"
   },
   "dependencies": {}
 }

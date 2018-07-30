@@ -261,4 +261,4 @@ function wrapData(wrapper, callback) {
 
 }
 
-module.exports = wrapData
+export default wrapData
