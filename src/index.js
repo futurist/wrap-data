@@ -21,7 +21,7 @@ function isPrimitive(val) {
 
 function getPath(path) {
   if (typeof path === 'string') path = path.split('.')
-  return path
+  return isArray(path) ? path : [path]
 }
 
 function isWrapper(obj){
