@@ -185,10 +185,10 @@ function wrapData(wrapper, callback) {
       }
       p = path[i]
       if(isWrapper(n[p])){
-        val = n[p](createWrap(value, path.slice())())
+        val = n[p](createWrap(value, obj.path.concat(path))())
         action = 'change'
       } else {
-        val = n[p] = createWrap(value, path.slice())
+        val = n[p] = createWrap(value, obj.path.concat(path))
         // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
         action = 'add'
       }

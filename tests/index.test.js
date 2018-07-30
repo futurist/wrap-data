@@ -52,8 +52,14 @@ it('not dive into stream', ()=>{
 it('array set test', () => {
   var spy = it.spy()
   var x = wrapData(mithirlStream, spy)({a:[]})
+
   x().a([])
   it(spy.callCount).equals(1)
+
+  x().a.set(0, {x:1})
+  it(spy.callCount).equals(2)
+  it(x().a()[0]().x.path.join()).equals('a,0,x')
+
 })
 
 it('object test', () => {
