@@ -159,27 +159,39 @@ function wrapData(wrapper, callback) {
 
   function set(path, value) {
     let obj = this
+    if(arguments.length===1) {
+      value = path
+      path = []
+    }
 
     path = getPath(path)
-    if (!isWrapper(obj) || !path.length) return obj
+    if (!isWrapper(obj)) return obj
+
+    let val, action
     let i, len, p, n = obj()
     finished = 0
-    for (i = 0, len = path.length - 1; i < len; i++) {
-      p = path[i]
-      if (!isWrapper(n[p])) {
-        n[p] = bindMethods(wrapper({}), path.slice(0, i + 1))
-      }
-      n = n[p]()
-    }
-    p = path[i]
-    let val, action
-    if(isWrapper(n[p])){
-      val = n[p](createWrap(value, path.slice())())
+    
+    if(!path.length){
+      obj(createWrap(value, obj.path.slice())())
+      val = obj
       action = 'change'
     } else {
-      val = n[p] = createWrap(value, path.slice())
-      // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
-      action = 'add'
+      for (i = 0, len = path.length - 1; i < len; i++) {
+        p = path[i]
+        if (!isWrapper(n[p])) {
+          n[p] = bindMethods(wrapper({}), path.slice(0, i + 1))
+        }
+        n = n[p]()
+      }
+      p = path[i]
+      if(isWrapper(n[p])){
+        val = n[p](createWrap(value, path.slice())())
+        action = 'change'
+      } else {
+        val = n[p] = createWrap(value, path.slice())
+        // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
+        action = 'add'
+      }
     }
     finished = 1
     cb(val, action)
@@ -261,4 +273,4 @@ function wrapData(wrapper, callback) {
 
 }
 
-export default wrapData
+module.exports = wrapData

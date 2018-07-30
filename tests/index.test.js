@@ -150,20 +150,29 @@ it('object test', () => {
 
   
   d.set('a.x.y', {xx:2})
+  it(spy.callCount).equals(7)
   it(d.get('a.x.y.xx').path.join()).equals('a,x,y,xx')
   it(d.get('a.x.y.xx')()).equals(2)
   it(d().a().x().y().xx()).equals(2)
 
   d.set('a.y.4', {yy:{zz:234}})
+  it(spy.callCount).equals(8)
   it(d.get('a.y')().length).equals(5)
   it(d.get('a.y.4.yy').path.join()).equals('a,y,4,yy')
   it(d.get('a.y.4.yy.zz').path.join()).equals('a,y,4,yy,zz')
   it(d.get('a.y.4.yy.zz')()).equals(234)
 
   d.unset('a.y.3')
+  it(spy.callCount).equals(9)
+
+  d.get('a.i').set(10)
+  it(spy.callCount).equals(10)
+  it(spy.args[0].type).equals('change')
+  it(d().a().i()).equals(10)
+  it(d().a().i.path.join()).equals('a,i')
 
   it(d.unwrap()).deepEquals({ a: 
-    { i: 99,
+    { i: 10,
       b: 1,
       v: 10,
       y: [ 3, 4, 5, {yy: {zz: 234}} ],
