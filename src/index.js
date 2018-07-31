@@ -53,6 +53,13 @@ function wrapData(wrapper, callback) {
     packer.ensure = ensure
     packer.unset = unset
     packer.unwrap = unwrap
+    if(isArray(packer())){
+      packer.push = push
+      packer.pop = pop
+      packer.shift = shift
+      packer.unshift = unshift
+      packer.splice = splice
+    }
     return packer
   }
 
@@ -212,7 +219,9 @@ function wrapData(wrapper, callback) {
     let deleteVal = parent[p]
     let result
     if(isArray(parent) && !isNaN(p)) {
-      result = parent.splice(p, 1)
+      finished = 0
+      result = createWrap(parent.splice(p, 1)[0], obj.path).unwrap()
+      finished = 1
     } else {
       result = delete parent[p]
     }
@@ -220,57 +229,100 @@ function wrapData(wrapper, callback) {
     return result
   }
 
-  function _checkCacheAndUnwrap(config, _cache, val, result, key) {
-    const prev = _cache.find(v=>v[0]===val)
-    if(prev != null) {
-      !config.json && prev.push(()=>{
-        const [_, r, k] = prev
-        result[key] = k==null ? r : r[k]
-      })
-    } else {
-      _cache.push([val, result, key])
-      result[key] = _unwrap(val, config, _cache)
-    }
-    return prev
+  function push(value) {
+    let len = this().length
+    return this.set(len, value)
   }
 
-  function _unwrap(obj, config, _cache) {
-    let isRoot = _cache==null
-    if(isRoot) _cache = [[obj]]
-    if (!isWrapper(obj)) return obj
-    
-    let result
-    let source = obj()
-    if (isArray(source)){
-      result = []
-      source.forEach((val,key)=> {
-        _checkCacheAndUnwrap(config, _cache, val, result, key)
-      })
-    } else if(isPOJO(source)){
-      result = {}
-      keys(source).forEach(key => {
-        const val = source[key]
-        _checkCacheAndUnwrap(config, _cache, val, result, key)
-      })
-    } else if(isWrapper(source)) {
-      result = _unwrap(source(), config, _cache)
-    } else {
-      result = source
+  function unshift(value) {
+    let obj = this
+    finished=0
+    let val = createWrap(value, obj.path.concat(0))
+    finished=1
+    this().splice(0, 0, val())
+    cb(val, 'add')
+    return val
+  }
+
+  function pop() {
+    let len = this().length
+    return len>0 && this.unset(len-1)
+  }
+
+  function shift() {
+    let len = this().length
+    return len>0 && this.unset(0)
+  }
+
+  function splice(start, deleteCount, ...args) {
+    const obj = this
+    const del = []
+    if(deleteCount>0) {
+      while(deleteCount--){
+        if(start<obj().length) del.unshift(obj.unset(start))
+      }
     }
-    if (isRoot) {
-      _cache.forEach(v => {
-        if (isFunction(v[3])) {
-          v[3]()
-        }
-      })
-    }
-    return result
+    args.forEach((item, i)=>{
+      finished=0
+      let val = createWrap(item, obj.path.concat(start+i))
+      finished=1
+      this().splice(start, 0, val())
+      cb(val, 'add')
+    })
+    return del
   }
 
   function unwrap(config={}) {
     return _unwrap(this, config)
   }
 
+}
+
+
+function _checkCacheAndUnwrap(config, _cache, val, result, key) {
+  const prev = _cache.find(v=>v[0]===val)
+  if(prev != null) {
+    !config.json && prev.push(()=>{
+      const [_, r, k] = prev
+      result[key] = k==null ? r : r[k]
+    })
+  } else {
+    _cache.push([val, result, key])
+    result[key] = _unwrap(val, config, _cache)
+  }
+  return prev
+}
+
+function _unwrap(obj, config, _cache) {
+  let isRoot = _cache==null
+  if(isRoot) _cache = [[obj]]
+  
+  let result
+  let source = isWrapper(obj) ? obj() : obj
+  if (isArray(source)){
+    result = []
+    source.forEach((val,key)=> {
+      _checkCacheAndUnwrap(config, _cache, val, result, key)
+    })
+  } else if(isPOJO(source)){
+    result = {}
+    keys(source).forEach(key => {
+      const val = source[key]
+      _checkCacheAndUnwrap(config, _cache, val, result, key)
+    })
+  } else if(isWrapper(source)) {
+    result = _unwrap(source(), config, _cache)
+  } else {
+    result = source
+  }
+  if (isRoot) {
+    _cache.forEach(v => {
+      if (isFunction(v[3])) {
+        v[3]()
+      }
+    })
+  }
+  return result
 }
 
 module.exports = wrapData

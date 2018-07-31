@@ -49,16 +49,56 @@ it('not dive into stream', ()=>{
   })
 })
 
-it('array set test', () => {
+it('array test', () => {
   var spy = it.spy()
-  var x = wrapData(mithirlStream, spy)({a:[]})
+  var x = wrapData(mithirlStream, spy)({a:{b:[]}})
 
-  x().a([])
+  var b = x().a().b
+  b([])
   it(spy.callCount).equals(1)
 
-  x().a.set(0, {x:1})
+  b.set(0, {x:1})
   it(spy.callCount).equals(2)
-  it(x().a()[0]().x.path.join()).equals('a,0,x')
+  it(b()[0]().x.path.join()).equals('a,b,0,x')
+
+  var val = b.push({x:2})
+  it(spy.callCount).equals(3)
+  it(val.path.join()).equals('a,b,1')
+  it(val().x()).deepEquals(2)
+  it(b().length).equals(2)
+
+  var val = b.unset(1)
+  it(spy.callCount).equals(4)
+  it(val).deepEquals({x:2})
+  it(b().length).equals(1)
+
+  var val = b.pop()
+  it(spy.callCount).equals(5)
+  it(val).deepEquals({x:1})
+  it(b().length).equals(0)
+
+  var val = b.unshift({x:3})
+  it(spy.callCount).equals(6)
+  it(val.path.join()).equals('a,b,0')
+  it(b().length).equals(1)
+  
+  var val = b.splice(0, 0, {x:4}, {x:5})
+  it(spy.callCount).equals(8)
+
+  var val = b.splice(0, 2)
+  it(spy.callCount).equals(10)
+  it(val.length).equals(2)
+  it(val).deepEquals([ { x: 4 }, { x: 5 } ])
+
+  var val = b.shift()
+  it(spy.callCount).equals(11)
+  it(b().length).equals(0)
+
+  var val = b.shift()
+  it(spy.callCount).equals(11)
+
+  var val = b.pop()
+  it(spy.callCount).equals(11)
 
 })
 
