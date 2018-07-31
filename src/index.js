@@ -165,6 +165,11 @@ function wrapData(wrapper, callback) {
     return val
   }
 
+  function getPathType(p){
+    const match = arrayKeyRegEx.exec(p)
+    return match!=null ? match.slice(1) : ['', p]
+  }
+
   function set(path, value) {
     let obj = this
     if(arguments.length===1) {
@@ -187,13 +192,9 @@ function wrapData(wrapper, callback) {
       for (i = 0, len = path.length - 1; i < len; i++) {
         p = path[i]
         if (!isWrapper(n[p])) {
-          let isArr = false
-          const match = arrayKeyRegEx.exec(p)
-          if(match!=null) {
-            isArr = true
-            p = match[2]
-          }
-          n[p] = bindMethods(wrapper(isArr ? [] : {}), path.slice(0, i + 1))
+          let t, arr = getPathType(p)
+          ;[t, p] = arr
+          n[p] = bindMethods(wrapper(t==='array' ? [] : {}), path.slice(0, i + 1))
         }
         n = n[p]()
       }

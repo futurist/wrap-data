@@ -103,6 +103,9 @@ it('array test', () => {
   var val = x.set('(array)c.0.xx', 10)
   it(spy.callCount).equals(12)
 
+  var val = x.ensure('(array)y')
+  console.log(val)
+
   it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ { xx: 10 } ] })
   
 })
