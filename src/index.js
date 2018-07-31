@@ -22,7 +22,13 @@ function isPrimitive(val) {
 
 function getPath(path) {
   if (typeof path === 'string') path = path.split('.')
-  return isArray(path) ? path : [path]
+  return (isArray(path) ? path : [path]).map(getPathType)
+}
+
+function getPathType(p){
+  if(isArray(p)) return p
+  const match = arrayKeyRegEx.exec(p)
+  return match!=null ? match.slice(1) : ['', p]
 }
 
 function isWrapper(obj){
@@ -149,7 +155,7 @@ function wrapData(wrapper, callback) {
       if (!isWrapper(n)) {
         return
       }
-      n = n()[path[i]]
+      n = n()[path[i][1]]
     }
     return n
   }
@@ -157,17 +163,11 @@ function wrapData(wrapper, callback) {
   // ensure path exists
   function ensure(path, defaultValue) {
     let obj = this
-    path = getPath(path)
     let val = obj.get(path)
     if (val == null) {
       val = obj.set(path, defaultValue)
     }
     return val
-  }
-
-  function getPathType(p){
-    const match = arrayKeyRegEx.exec(p)
-    return match!=null ? match.slice(1) : ['', p]
   }
 
   function set(path, value) {
@@ -181,7 +181,7 @@ function wrapData(wrapper, callback) {
     if (!isWrapper(obj)) return obj
 
     let val, action
-    let i, len, p, n = obj()
+    let i, len, t, p, n = obj()
     finished = 0
     
     if(!path.length){
@@ -189,21 +189,20 @@ function wrapData(wrapper, callback) {
       val = obj
       action = 'change'
     } else {
+      const _path = path.map(v=>v[1])
       for (i = 0, len = path.length - 1; i < len; i++) {
-        p = path[i]
+        ; [t, p] = path[i]
         if (!isWrapper(n[p])) {
-          let t, arr = getPathType(p)
-          ;[t, p] = arr
-          n[p] = bindMethods(wrapper(t==='array' ? [] : {}), path.slice(0, i + 1))
+          n[p] = bindMethods(wrapper(t==='array' ? [] : {}), _path.slice(0, i + 1))
         }
         n = n[p]()
       }
-      p = path[i]
+      ;[t, p] = path[i]
       if(isWrapper(n[p])){
-        val = n[p](createWrap(value, obj.path.concat(path))())
+        val = n[p](createWrap(value, obj.path.concat(_path))())
         action = 'change'
       } else {
-        val = n[p] = createWrap(value, obj.path.concat(path))
+        val = n[p] = createWrap(value, obj.path.concat(_path))
         // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
         action = 'add'
       }
@@ -223,7 +222,7 @@ function wrapData(wrapper, callback) {
     let val = obj.get(path.slice(0, -1))
     if (val == null) return
     let parent = val()
-    let p = path[len - 1]
+    let [t, p] = path[len - 1]
     let deleteVal = parent[p]
     let result
     if(isArray(parent) && !isNaN(p)) {
