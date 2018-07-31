@@ -44,7 +44,7 @@ function wrapData(wrapper, callback) {
   let finished = 0
   let root
   let _cache = null
-  let cb = (value, type) => finished && isFunction(callback) && callback({value, type})
+  let cb = (value, type) => finished && isFunction(callback) && root!=null && !root.skip && callback({value, type})
 
   return source => createWrap(source, [])
 
