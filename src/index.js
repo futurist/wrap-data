@@ -1,9 +1,10 @@
 /*jslint node: true */
 'use strict'
 
-var { keys, getPrototypeOf } = Object
-var { toString, hasOwnProperty } = Object.prototype
-var { isArray } = Array
+const { keys, getPrototypeOf } = Object
+const { toString, hasOwnProperty } = Object.prototype
+const { isArray } = Array
+const arrayKeyRegEx = /^\((array|number)\)(.+)$/
 
 // https://github.com/sindresorhus/is-plain-obj
 function isPOJO(x) {
@@ -186,7 +187,13 @@ function wrapData(wrapper, callback) {
       for (i = 0, len = path.length - 1; i < len; i++) {
         p = path[i]
         if (!isWrapper(n[p])) {
-          n[p] = bindMethods(wrapper({}), path.slice(0, i + 1))
+          let isArr = false
+          const match = arrayKeyRegEx.exec(p)
+          if(match!=null) {
+            isArr = true
+            p = match[2]
+          }
+          n[p] = bindMethods(wrapper(isArr ? [] : {}), path.slice(0, i + 1))
         }
         n = n[p]()
       }

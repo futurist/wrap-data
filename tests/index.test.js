@@ -100,6 +100,11 @@ it('array test', () => {
   var val = b.pop()
   it(spy.callCount).equals(11)
 
+  var val = x.set('(array)c.0.xx', 10)
+  it(spy.callCount).equals(12)
+
+  it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ { xx: 10 } ] })
+  
 })
 
 it('object test', () => {
