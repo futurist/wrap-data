@@ -112,6 +112,12 @@ it('array test', () => {
   
 })
 
+it('single unwrap', ()=>{
+  var spy = it.spy()
+  var x = wrapData(mithirlStream, spy)({a:{b:mithirlStream(10)}})
+  it(x().a.unwrap()).deepEquals({b: 10})
+})
+
 it('object test', () => {
   var xa = {
     i: mithirlStream(mithirlStream(99)),
