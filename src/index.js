@@ -1,7 +1,7 @@
 /*jslint node: true */
 'use strict'
 
-const { keys, getPrototypeOf } = Object
+const { assign, keys, getPrototypeOf } = Object
 const { toString, hasOwnProperty } = Object.prototype
 const { isArray } = Array
 const arrayKeyRegEx = /^\((array|number)\)(.+)$/
@@ -56,6 +56,7 @@ function wrapData(wrapper, callback) {
     packer.map(v => cb(packer, type))
     type = 'change'
     packer.get = get
+    packer.got = got
     packer.set = set
     packer.ensure = ensure
     packer.unset = unset
@@ -158,6 +159,11 @@ function wrapData(wrapper, callback) {
       n = n()[path[i][1]]
     }
     return n
+  }
+
+  function got (path) {
+    const stream = this.get(path)
+    return assign({stream},  stream != null && {value: stream.unwrap()})
   }
 
   // ensure path exists
