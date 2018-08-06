@@ -194,13 +194,13 @@ it('object test', () => {
   var ss = d.ensure('a.x.y', 234)
   it(spy.callCount).equals(2)
   // ensure not changed for exits one
-  it(ss()).equals(34)
+  it(ss.unwrap()).equals(34)
 
   // but set can
   d.set('a.x.y', 3)
   it(spy.callCount).equals(3)
   it(spy.args[0].type).equals('change')  // 0: CHANGE
-  it(ss()).equals(3)
+  it(ss.unwrap()).equals(3)
 
   try{
     var ss = d.ensure('a.v.z', 234)
@@ -219,7 +219,7 @@ it('object test', () => {
 
   d.set('a.x.y', 199)
   it(spy.callCount).equals(5)
-  it(d.get('a.x').get('y')()).equals(199)
+  it(d.get('a.x').get('y').unwrap()).equals(199)
 
   d.unset('a.x.y')
   it(spy.callCount).equals(6)
@@ -309,7 +309,19 @@ it('getset', ()=>{
   })
   var r = d.getset('b.c', v=>v+1)
   it(spy.callCount).equals(1)
-  it(r).equals(3)
+  it(r.unwrap()).equals(3)
+
+  var r = d.getset('b.d', (v,empty)=>{
+    it(empty).equals(true)
+    return {y:3}
+  })
+  it(spy.callCount).equals(2)
+  it(r.path.join()).equals('b,d')
+  it(r.unwrap()).deepEquals({y:3})
+
+  var x = d.get('b.c')
+  var r = x.getset(v=>v+1)
+  it(r.unwrap()).equals(4)
   
 })
 
