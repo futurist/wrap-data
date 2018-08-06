@@ -16,6 +16,9 @@ it('mithril stream', () => {
   it(d().a()).equals(1)
   it(typeof d().b()).equals('object')
   it(d().b().c()).equals(2)
+  it(Object.keys(d.set({b:1})())).deepEquals(['b'])
+  it(d.set({b:1}).unwrap()).deepEquals({b:1})
+
 })
 
 it('flyd stream', () => {
