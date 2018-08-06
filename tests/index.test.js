@@ -37,6 +37,14 @@ it('flyd stream', () => {
 
 })
 
+it('root unwrap', () => {
+  var w = wrapData(flyd.stream)
+  var d = w({a:{ b: {c: 2}}})
+  it(d.unwrap({path:'a.b'})).deepEquals({c:2})
+  it(d.unwrap({path: 'a.b.c'})).deepEquals(2)
+  it(d.unwrap({path: 'a.b.c.d'})).deepEquals(undefined)
+
+})
 
 it('not dive into stream', ()=>{
   var d = wrapData(mithirlStream)({

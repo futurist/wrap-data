@@ -163,7 +163,7 @@ function wrapData(wrapper, callback) {
 
   function got (path) {
     const stream = this.get(path)
-    return assign({stream},  stream != null && {value: stream.unwrap()})
+    return assign({stream},  stream != null && {value: isWrapper(stream) ? stream.unwrap() : stream})
   }
 
   // ensure path exists
@@ -286,7 +286,8 @@ function wrapData(wrapper, callback) {
   }
 
   function unwrap(config={}) {
-    return _unwrap(this, config)
+    const {path} = config
+    return _unwrap(path!=null ? this.get(path) : this, config)
   }
 
 }
