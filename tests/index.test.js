@@ -301,6 +301,18 @@ it('circle object test', () => {
 
 })
 
+it('getset', ()=>{
+  var spy = it.spy()
+  var w = wrapData(mithirlStream, spy)
+  var d = w({
+    a:1, b:{c:2}
+  })
+  var r = d.getset('b.c', v=>v+1)
+  it(spy.callCount).equals(1)
+  it(r).equals(3)
+  
+})
+
 
 if(require.main === module) it.run()
 

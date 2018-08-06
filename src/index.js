@@ -58,6 +58,7 @@ function wrapData(wrapper, callback) {
     packer.get = get
     packer.got = got
     packer.set = set
+    packer.getset = getset
     packer.ensure = ensure
     packer.unset = unset
     packer.unwrap = unwrap
@@ -175,14 +176,23 @@ function wrapData(wrapper, callback) {
     }
     return val
   }
-
+  
   function set(path, value) {
-    let obj = this
     if(arguments.length===1) {
       value = path
       path = []
     }
+    const func = ()=>value
+    return getset.call(this, path, func)
+  }
 
+  function getset(path, func) {
+    let obj = this
+    if(arguments.length===1) {
+      func = path
+      path = []
+    }
+    
     path = getPath(path)
     if (!isWrapper(obj)) return obj
 
@@ -191,7 +201,7 @@ function wrapData(wrapper, callback) {
     finished = 0
     
     if(!path.length){
-      obj(createWrap(value, obj.path.slice())())
+      obj(createWrap(func(obj.unwrap()), obj.path.slice())())
       val = obj
       action = 'change'
     } else {
@@ -205,10 +215,10 @@ function wrapData(wrapper, callback) {
       }
       ;[t, p] = path[i]
       if(isWrapper(n[p])){
-        val = n[p](createWrap(value, obj.path.concat(_path))())
+        val = n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path))())
         action = 'change'
       } else {
-        val = n[p] = createWrap(value, obj.path.concat(_path))
+        val = n[p] = createWrap(func(n[p], true), obj.path.concat(_path))
         // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
         action = 'add'
       }
