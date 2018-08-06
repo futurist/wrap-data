@@ -295,8 +295,11 @@ function wrapData(wrapper, callback) {
     return del
   }
 
-  function unwrap(config={}) {
-    const {path} = config
+  function unwrap(path, config={}) {
+    if(arguments.length===1 && isPOJO(path)) {
+      config = path
+      path = null
+    }
     return _unwrap(path!=null ? this.get(path) : this, config)
   }
 

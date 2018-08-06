@@ -39,10 +39,14 @@ it('flyd stream', () => {
 
 it('root unwrap', () => {
   var w = wrapData(flyd.stream)
-  var d = w({a:{ b: {c: 2}}})
-  it(d.unwrap({path:'a.b'})).deepEquals({c:2})
-  it(d.unwrap({path: 'a.b.c'})).deepEquals(2)
-  it(d.unwrap({path: 'a.b.c.d'})).deepEquals(undefined)
+  var data = {a:{ b: {c: 2}}}
+  data.a.b.x = data.a
+  var d = w(data)
+  it(d.unwrap('a.b', {json: true})).deepEquals({c:2, x:{}})
+  it(d.unwrap( 'a.b.c')).deepEquals(2)
+  it(d.unwrap( 'a.b.c.d')).deepEquals(undefined)
+
+  it(d.get('a').unwrap('b.c')).deepEquals(2)
 
 })
 
