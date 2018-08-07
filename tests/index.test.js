@@ -66,7 +66,8 @@ it('not dive into stream', ()=>{
 
 it('array test', () => {
   var spy = it.spy()
-  var x = wrapData(mithirlStream, spy)({a:{b:[]}})
+  var x = wrapData(mithirlStream)({a:{b:[]}})
+  x.changed.map(spy)
 
   var b = x().a().b
   b([])
@@ -129,7 +130,8 @@ it('array test', () => {
 
 it('single unwrap', ()=>{
   var spy = it.spy()
-  var x = wrapData(mithirlStream, spy)({a:{b:mithirlStream(10)}})
+  var x = wrapData(mithirlStream)({a:{b:mithirlStream(10)}})
+  x.changed.map(spy)
   it(x().a.unwrap()).deepEquals({b: 10})
 })
 
@@ -148,8 +150,9 @@ it('object test', () => {
   }
 
   var spy = it.spy()
-  var w = wrapData(mithirlStream, spy)
+  var w = wrapData(mithirlStream)
   var d = w(x)
+  d.changed.map(spy)
   it(spy.callCount).equals(0)
 
   it(d.unwrap()).deepEquals({
@@ -213,7 +216,7 @@ it('object test', () => {
     var err = e
   }
   it(err instanceof Error).equals(true)
-  // failed, but still callback
+  // failed, but still changed
   it(spy.callCount).equals(3)
 
   // success ensured set
@@ -281,8 +284,9 @@ it('circle object test', () => {
   xa.a = x
 
   var spy = it.spy()
-  var w = wrapData(mithirlStream, spy)
+  var w = wrapData(mithirlStream)
   var d = w(x)
+  d.changed.map(spy)
   it(spy.callCount).equals(0)
 
   it(keys(d()).join()).equals('a')
@@ -307,10 +311,11 @@ it('circle object test', () => {
 
 it('getset', ()=>{
   var spy = it.spy()
-  var w = wrapData(mithirlStream, spy)
+  var w = wrapData(mithirlStream)
   var d = w({
     a:1, b:{c:2}
   })
+  d.changed.map(spy)
   var r = d.getset('b.c', v=>v+1)
   it(spy.callCount).equals(1)
   it(r.unwrap()).equals(3)
