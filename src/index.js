@@ -43,10 +43,16 @@ function wrapData(wrapper, callback) {
 
   let finished = 0
   let root
+  let _callback = wrapper()
   let _cache = null
-  let cb = (value, type) => finished && isFunction(callback) && root!=null && !root.skip && callback({value, type})
+  if(isFunction(callback)) _callback.map(callback)
+  let cb = (value, type) => finished && root!=null && !root.skip && _callback({value, type})
 
-  return source => createWrap(source, [])
+  return source => {
+    root = createWrap(source, [])
+    root.callback = _callback
+    return root
+  }
 
   function bindMethods(packer, path, type='change') {
     if('path' in packer && 'root' in packer) return packer
