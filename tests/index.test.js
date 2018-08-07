@@ -116,10 +116,10 @@ it('array test', () => {
   var val = b.pop()
   it(spy.callCount).equals(11)
 
-  var val = x.set('(array)c.0.xx', 10)
+  var val = x.set('[c].0.xx', 10)
   it(spy.callCount).equals(12)
 
-  var val = x.ensure('(array)y.0', 10)
+  var val = x.ensure('[y].0', 10)
   it(val()).equals(10)
   it(val.path.join()).equals('y,0')
   it(spy.callCount).equals(13)

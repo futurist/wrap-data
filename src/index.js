@@ -4,7 +4,7 @@
 const { assign, keys, getPrototypeOf } = Object
 const { toString, hasOwnProperty } = Object.prototype
 const { isArray } = Array
-const arrayKeyRegEx = /^\((array|number)\)(.+)$/
+const arrayKeyRegEx = /^\[(\w+)\]$/
 
 // https://github.com/sindresorhus/is-plain-obj
 function isPOJO(x) {
@@ -28,7 +28,7 @@ function getPath(path) {
 function getPathType(p){
   if(isArray(p)) return p
   const match = arrayKeyRegEx.exec(p)
-  return match!=null ? match.slice(1) : ['', p]
+  return match!=null ? ['array', match[1]] : ['', p]
 }
 
 function isWrapper(obj){
