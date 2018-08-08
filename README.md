@@ -20,7 +20,7 @@ npm i -S wrap-data
 
 ## Usage
 
-First you need a **stream** like helper function or library, which conforms to the [fantasy land](https://github.com/fantasyland/fantasy-land) specification, [flyd](https://github.com/paldepind/flyd) is recommanded.
+First you need a **stream** like helper function or library, which conforms to the [fantasy land applicative](https://github.com/fantasyland/fantasy-land#applicative) specification, [flyd](https://github.com/paldepind/flyd) is recommanded.
 
 ### - **Convert existing data and use wrapped data**
 
@@ -114,7 +114,7 @@ class App extends React.Component {
     }
   
     componentWillUnmount(){
-      this.update.end(true)
+        this.update.end(true)
     }
     
     render(){

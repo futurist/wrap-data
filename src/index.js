@@ -38,6 +38,12 @@ function isWrapper(obj){
 function isPrimitive2(val) {
   return isPrimitive(val) || isWrapper(val)
 }
+const ignoreFirstCall = fn => {
+  let calledOnce = false
+  return function(arg) {
+    return calledOnce ? fn.call(this, arg) : calledOnce = true
+  }
+}
 
 function wrapData(wrapper) {
 
@@ -45,10 +51,17 @@ function wrapData(wrapper) {
     let finished = 0
     let root
     let _callback = wrapper()
+    let changeCount = 0
     let _cache = null
-    let cb = (value, type) => finished && root!=null && !root.skip && _callback({value, type})
+    let cb = (value, type) => finished && root!=null && !root.skip && ++changeCount>0 && _callback({value, type})
 
     root = createWrap(source, [])
+    
+    let oldMap = _callback.map
+    _callback.map = function(fn) {
+      const _fn = changeCount>0 ? ignoreFirstCall(fn) : fn
+      return oldMap.call(this, _fn)
+    }
     root.changed = _callback
 
     function bindMethods(packer, path, type='change') {

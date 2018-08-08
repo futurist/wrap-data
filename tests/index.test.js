@@ -67,6 +67,7 @@ it('not dive into stream', ()=>{
 it('array test', () => {
   var spy = it.spy()
   var x = wrapData(mithirlStream)({a:{b:[]}})
+  x().a(x().a()) // give it a change first to test map
   x.changed.map(spy)
 
   var b = x().a().b
