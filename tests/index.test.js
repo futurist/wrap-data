@@ -84,7 +84,7 @@ it('array test', () => {
   it(val().x()).deepEquals(2)
   it(b().length).equals(2)
 
-  var val = b.unset(1)
+  var val = b.pop()
   it(spy.callCount).equals(4)
   it(val).deepEquals({x:2})
   it(b().length).equals(1)
@@ -94,36 +94,13 @@ it('array test', () => {
   it(val).deepEquals({x:1})
   it(b().length).equals(0)
 
-  var val = b.unshift({x:3})
-  it(spy.callCount).equals(6)
-  it(val.path.join()).equals('a,b,0')
-  it(b().length).equals(1)
-  
-  var val = b.splice(0, 0, {x:4}, {x:5})
-  it(spy.callCount).equals(8)
-
-  var val = b.splice(0, 2)
-  it(spy.callCount).equals(10)
-  it(val.length).equals(2)
-  it(val).deepEquals([ { x: 4 }, { x: 5 } ])
-
-  var val = b.shift()
-  it(spy.callCount).equals(11)
-  it(b().length).equals(0)
-
-  var val = b.shift()
-  it(spy.callCount).equals(11)
-
-  var val = b.pop()
-  it(spy.callCount).equals(11)
-
   var val = x.set('[c].0.xx', 10)
-  it(spy.callCount).equals(12)
+  it(spy.callCount).equals(6)
 
   var val = x.ensure('[y].0', 10)
   it(val()).equals(10)
   it(val.path.join()).equals('y,0')
-  it(spy.callCount).equals(13)
+  it(spy.callCount).equals(7)
 
   it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ { xx: 10 } ], y: [10] })
   
@@ -259,11 +236,13 @@ it('object test', () => {
   it(d().a().i()).equals(10)
   it(d().a().i.path.join()).equals('a,i')
 
+  var y = [ 3, 4, 5, null, {yy: {zz: 234}} ]
+  delete y[3]
   it(d.unwrap()).deepEquals({ a: 
     { i: 10,
       b: 1,
       v: 10,
-      y: [ 3, 4, 5, {yy: {zz: 234}} ],
+      y,
       c: { d: 3 },
       x: { f: 35, z: 234, y: {xx:2} } } })
 

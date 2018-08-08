@@ -81,9 +81,6 @@ function wrapData(wrapper) {
       if(isArray(packer())){
         packer.push = push
         packer.pop = pop
-        packer.shift = shift
-        packer.unshift = unshift
-        packer.splice = splice
       }
       return packer
     }
@@ -255,17 +252,11 @@ function wrapData(wrapper) {
       if (val == null) return
       let parent = val()
       let [t, p] = path[len - 1]
+      if(!(p in parent)) return
       let deleteVal = parent[p]
-      let result
-      if(isArray(parent) && !isNaN(p)) {
-        finished = 0
-        result = createWrap(parent.splice(p, 1)[0], obj.path).unwrap()
-        finished = 1
-      } else {
-        result = delete parent[p]
-      }
+      delete parent[p]
       cb(deleteVal, 'delete')
-      return result
+      return isWrapper(deleteVal) ? deleteVal.unwrap() : deleteVal
     }
 
     function push(value) {
@@ -273,42 +264,11 @@ function wrapData(wrapper) {
       return this.set(len, value)
     }
 
-    function unshift(value) {
-      let obj = this
-      finished=0
-      let val = createWrap(value, obj.path.concat(0))
-      finished=1
-      this().splice(0, 0, val())
-      cb(val, 'add')
-      return val
-    }
-
     function pop() {
       let len = this().length
-      return len>0 && this.unset(len-1)
-    }
-
-    function shift() {
-      let len = this().length
-      return len>0 && this.unset(0)
-    }
-
-    function splice(start, deleteCount, ...args) {
-      const obj = this
-      const del = []
-      if(deleteCount>0) {
-        while(deleteCount--){
-          if(start<obj().length) del.unshift(obj.unset(start))
-        }
-      }
-      args.forEach((item, i)=>{
-        finished=0
-        let val = createWrap(item, obj.path.concat(start+i))
-        finished=1
-        this().splice(start, 0, val())
-        cb(val, 'add')
-      })
-      return del
+      let val = this.unset(len-1)
+      this().pop()
+      return val
     }
 
     function unwrap(path, config={}) {
