@@ -104,6 +104,14 @@ it('array test', () => {
 
   it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ { xx: 10 } ], y: [10] })
   
+  // array unwrap, mutate and reset
+  var c = x.get('c')
+  var _c = c.unwrap()
+  _c.unshift({yy: 2})
+  c.set(_c)
+  it(spy.callCount).equals(8)
+  it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ {yy:2}, { xx: 10 } ], y: [10] })
+  
 })
 
 it('single unwrap', ()=>{
