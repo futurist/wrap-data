@@ -135,4 +135,16 @@ ReactDOM.render(<App model={model} />, APP)
 ```
 
 
+## API
 
+### - wrapData = require('wrap-data')
+> get the `wrapData` function
+
+### - wrapperFactory = wrapData(stream)
+> the `wrapperFactory` used to turn data into wrapped data
+
+### - root = wrapperFactory(data)
+> the `root` is the wrapped data, with all nested data wrapped
+
+### wrapped.get(path: string|string[])
+> get nested wrapped data from path
