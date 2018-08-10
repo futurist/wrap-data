@@ -181,25 +181,25 @@ function wrapData(wrapper) {
     }
 
     // ensure path exists
-    function ensure(path, defaultValue) {
+    function ensure(path, defaultValue, descriptor) {
       let obj = this
       let val = obj.get(path)
       if (val == null) {
-        val = obj.set(path, defaultValue)
+        val = obj.set(path, defaultValue, descriptor)
       }
       return val
     }
     
-    function set(path, value) {
+    function set(path, value, descriptor) {
       if(arguments.length===1) {
         value = path
         path = []
       }
       const func = ()=>value
-      return getset.call(this, path, func)
+      return getset.call(this, path, func, descriptor)
     }
 
-    function getset(path, func) {
+    function getset(path, func, descriptor) {
       let obj = this
       if(arguments.length===1) {
         func = path
@@ -209,13 +209,13 @@ function wrapData(wrapper) {
       path = getPath(path)
       if (!isWrapper(obj)) return obj
 
-      let val, action
+      let value, action
       let i, len, t, p, n = obj()
       finished = 0
       
       if(!path.length){
         obj(createWrap(func(obj.unwrap()), obj.path.slice())())
-        val = obj
+        value = obj
         action = 'change'
       } else {
         const _path = path.map(v=>v[1])
@@ -228,18 +228,22 @@ function wrapData(wrapper) {
         }
         ;[t, p] = path[i]
         if(isWrapper(n[p])){
-          val = n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path)))
+          value = n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path)))
           action = 'change'
         } else {
-          val = n[p] = createWrap(func(n[p], true), obj.path.concat(_path))
-          // n[p] = bindMethods(wrapper(value), path.slice(), 'add')
+          value = createWrap(func(n[p], true), obj.path.concat(_path))
+          if(isPrimitive(descriptor)) {
+            n[p] = value
+          }else{
+            Object.defineProperty(n, p, assign({value}, descriptor))
+          }
           action = 'add'
         }
       }
       finished = 1
-      cb(val, action)
+      cb(value, action)
 
-      return val
+      return value
     }
 
     function unset(path) {

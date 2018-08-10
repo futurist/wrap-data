@@ -322,6 +322,23 @@ it('getset', ()=>{
   
 })
 
+it('set descriptor', ()=>{
+  var spy = it.spy()
+  var w = wrapData(mithirlStream)
+  var d = w({
+    a:1, b:{c:2}
+  })
+  d.changed.map(spy)
+  var r = d.set('b.x', 3, {})
+  it(spy.callCount).equals(1)
+  it(r.unwrap()).equals(3)
+
+  d.ensure('b.y', 10, {})
+  d.ensure('b.z', 10, {enumerable: true})
+  it(d.unwrap()).deepEquals({
+    a:1, b:{c:2, z:10}
+  })
+})
 
 if(require.main === module) it.run()
 
