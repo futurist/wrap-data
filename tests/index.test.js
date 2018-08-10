@@ -68,7 +68,7 @@ it('array test', () => {
   var spy = it.spy()
   var x = wrapData(mithirlStream)({a:{b:[]}})
   x().a(x().a()) // give it a change first to test map
-  x.changed.map(spy)
+  x.change.map(spy)
 
   var b = x().a().b
   b([])
@@ -117,7 +117,7 @@ it('array test', () => {
 it('single unwrap', ()=>{
   var spy = it.spy()
   var x = wrapData(mithirlStream)({a:{b:mithirlStream(10)}})
-  x.changed.map(spy)
+  x.change.map(spy)
   it(x().a.unwrap()).deepEquals({b: 10})
 })
 
@@ -138,7 +138,7 @@ it('object test', () => {
   var spy = it.spy()
   var w = wrapData(mithirlStream)
   var d = w(x)
-  d.changed.map(spy)
+  d.change.map(spy)
   it(spy.callCount).equals(0)
 
   it(d.unwrap()).deepEquals({
@@ -186,7 +186,7 @@ it('object test', () => {
 
   var ss = d.ensure('a.x.y', 234)
   it(spy.callCount).equals(2)
-  // ensure not changed for exits one
+  // ensure not change for exits one
   it(ss.unwrap()).equals(34)
 
   // but set can
@@ -202,7 +202,7 @@ it('object test', () => {
     var err = e
   }
   it(err instanceof Error).equals(true)
-  // failed, but still changed
+  // failed, but still change
   it(spy.callCount).equals(3)
 
   // success ensured set
@@ -274,7 +274,7 @@ it('circle object test', () => {
   var spy = it.spy()
   var w = wrapData(mithirlStream)
   var d = w(x)
-  d.changed.map(spy)
+  d.change.map(spy)
   it(spy.callCount).equals(0)
 
   it(keys(d()).join()).equals('a')
@@ -303,7 +303,7 @@ it('getset', ()=>{
   var d = w({
     a:1, b:{c:2}
   })
-  d.changed.map(spy)
+  d.change.map(spy)
   var r = d.getset('b.c', v=>v+1)
   it(spy.callCount).equals(1)
   it(r.unwrap()).equals(3)
@@ -328,7 +328,7 @@ it('set descriptor', ()=>{
   var d = w({
     a:1, b:{c:2}
   })
-  d.changed.map(spy)
+  d.change.map(spy)
   var r = d.set('b.x', 3, {})
   it(spy.callCount).equals(1)
   it(r.unwrap()).equals(3)

@@ -62,7 +62,7 @@ function wrapData(wrapper) {
       const _fn = changeCount>0 ? ignoreFirstCall(fn) : fn
       return oldMap.call(this, _fn)
     }
-    root.changed = _callback
+    root.change = _callback
 
     function bindMethods(packer, path, type='change') {
       if('path' in packer && 'root' in packer) return packer

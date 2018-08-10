@@ -57,11 +57,11 @@ model.unwrap() // {firstName: 'Hello', lastName: 'World'}
 
 ### - **Observe data changes**
 
-The root `model` has a `changed` stream, you can get callback from every data changes.
+The root `model` has a `change` stream, you can get callback from every data changes.
 
 ```js
 // start observe model changes
-const update = model.changed.map(({value, type})=>{
+const update = model.change.map(({value, type})=>{
     console.log('data mutated:', value.path, type, value.unwrap())
 })
 
@@ -106,7 +106,7 @@ class App extends React.Component {
         super(props)
         const {model} = this.props
         
-        this.update = model.changed.map(({value, type})=>{
+        this.update = model.change.map(({value, type})=>{
             console.log(type, value.unwrap())
             this.forceUpdate()
         })
