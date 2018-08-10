@@ -228,7 +228,8 @@ function wrapData(wrapper) {
         }
         ;[t, p] = path[i]
         if(isWrapper(n[p])){
-          value = n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path)))
+          n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path))())
+          value = n[p]
           action = 'change'
         } else {
           value = createWrap(func(n[p], true), obj.path.concat(_path))

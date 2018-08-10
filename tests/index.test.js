@@ -333,6 +333,11 @@ it('set descriptor', ()=>{
   it(spy.callCount).equals(1)
   it(r.unwrap()).equals(3)
 
+  // test set, then get
+  d.set('b.x', 4)
+  r = d.get('b.x')
+  it(r()).equals(4)
+
   d.ensure('b.y', 10, {})
   d.ensure('b.z', 10, {enumerable: true})
   it(d.unwrap()).deepEquals({
