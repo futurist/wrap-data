@@ -340,8 +340,11 @@ it('set descriptor', ()=>{
 
   d.ensure('b.y', 10, {})
   d.ensure('b.z', 10, {enumerable: true})
+
+  d.get('a').set()
+
   it(d.unwrap()).deepEquals({
-    a:1, b:{c:2, z:10}
+    a:undefined, b:{c:2, z:10}
   })
 })
 

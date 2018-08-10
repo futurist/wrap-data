@@ -191,7 +191,7 @@ function wrapData(wrapper) {
     }
     
     function set(path, value, descriptor) {
-      if(arguments.length===1) {
+      if(arguments.length<=1) {
         value = path
         path = []
       }
@@ -201,7 +201,7 @@ function wrapData(wrapper) {
 
     function getset(path, func, descriptor) {
       let obj = this
-      if(arguments.length===1) {
+      if(arguments.length<=1) {
         func = path
         path = []
       }

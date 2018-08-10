@@ -143,8 +143,43 @@ ReactDOM.render(<App model={model} />, APP)
 ### - wrapperFactory = wrapData(stream)
 > the `wrapperFactory` used to turn data into wrapped data
 
+```js
+var flyd = require('flyd')
+var wrapFn = wrapData(flyd.stream)
+```
+
 ### - root = wrapperFactory(data)
-> the `root` is the wrapped data, with all nested data wrapped
+> the `root` is the wrapped data, with all nested data wrapped.
+
+`root.change` is also a stream, you can `map` it to receive any data change inside.
+
+Any data inside is called `wrapped data`, which is a stream.
+
+```js
+var root = wrapFn({x: {y: {z: 1}}})
+root().x().y().z()  // 1
+root.change.map(({value, type})=>{ console.log(value, type) })
+root().x().y().z(2)
+```
 
 ### wrapped.get(path: string|string[])
-> get nested wrapped data from path
+> get nested wrapped data from path, path is array of string or dot(`"."`) seperated string.
+
+```js
+var z = root.get('x.y.z')
+// or
+var z = root.get(['x','y','z'])
+z() //2
+z(10)
+```
+
+### wrapped.set(path: string|string[], value, descriptor)
+> set nested wrapped data value from path, same rule as `get` method.
+
+`value` can be any data types, if `path` is omitted, set value into wrapped data itself.
+
+`descriptor` is optional, same as `Object.defineProperty` 3rd argument, but without `value`, this can create non-enumerable stream which will be hidden when `unwrap`.
+
+
+
+
