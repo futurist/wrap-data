@@ -201,7 +201,7 @@ function wrapData(wrapper) {
 
     function getset(path, func, descriptor) {
       let obj = this
-      if(arguments.length<=1) {
+      if(arguments.length<=1 && isFunction(path)) {
         func = path
         path = []
       }
@@ -210,7 +210,7 @@ function wrapData(wrapper) {
       if (!isWrapper(obj)) return obj
 
       let value, action
-      let i, len, t, p, n = obj()
+      let i, len, t, nextT, p, n = obj()
       finished = 0
       
       if(!path.length){
@@ -220,9 +220,10 @@ function wrapData(wrapper) {
       } else {
         const _path = path.map(v=>v[1])
         for (i = 0, len = path.length - 1; i < len; i++) {
-          ; [t, p] = path[i]
+          ;[t, p] = path[i]
+          ;[nextT] = path[i+1]
           if (!isWrapper(n[p])) {
-            n[p] = bindMethods(wrapper(t==='array' ? [] : {}), _path.slice(0, i + 1))
+            n[p] = bindMethods(wrapper(nextT==='array' ? [] : {}), _path.slice(0, i + 1))
           }
           n = n[p]()
         }

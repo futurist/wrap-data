@@ -6,7 +6,7 @@
   "module": "dist/index.es.js",
   "browser": "dist/index.umd.js",
   "scripts": {
-    "test": "npm run build && ospec",
+    "test": "ospec",
     "build": "rollup -c",
     "preversion": "npm run build"
   },

@@ -94,10 +94,10 @@ it('array test', () => {
   it(val).deepEquals({x:1})
   it(b().length).equals(0)
 
-  var val = x.set('[c].0.xx', 10)
+  var val = x.set('c.[0].xx', 10)
   it(spy.callCount).equals(6)
 
-  var val = x.ensure('[y].0', 10)
+  var val = x.ensure('y.[0]', 10)
   it(val()).equals(10)
   it(val.path.join()).equals('y,0')
   it(spy.callCount).equals(7)
