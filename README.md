@@ -23,7 +23,7 @@ npm i -S wrap-data
 
 ## Usage
 
-First you need a **stream** like helper function or library, which conforms to the [fantasy land applicative](https://github.com/fantasyland/fantasy-land#applicative) specification, [flyd](https://github.com/paldepind/flyd) is recommanded.
+First you need a **stream** like helper function or library, which conforms to the [fantasy land applicative](https://github.com/fantasyland/fantasy-land#applicative) specification, [flyd](https://github.com/paldepind/flyd) is recommended.
 
 ### - **Convert existing data and use wrapped data**
 
