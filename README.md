@@ -35,18 +35,20 @@ const data = {
     lastName: 'World'
 }
 const model = wrapData(flyd.stream)(data)
-// everything inside model is a stream!
+// model, and everything inside model is a stream!
 
 // manually access a data
 model().firstName  // stream(Hello)
 model().lastName  // stream(World)
 
-model.set('address', {city: 'Mars'})  // set model.address
-model().address().city()  // 'Mars'
+model.set('address', {city: 'Mercury'})  // set model.address
+
+model().address().city()  // get value: 'Mercury'
+model().address().city('Mars')  // set value: 'Mars'
 
 const city = model.get('address.city')  //stream(Mars)
-city()  // 'Mars'
-city('Earth')  // stream(Earth)
+city()  // get value: 'Mars'
+city('Earth')  // set value: 'Earth'
 
 model.unwrap('address')  // {city: 'Earth'}
 model.unset('address')   // unset model.address
