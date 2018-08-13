@@ -1,6 +1,6 @@
 {
   "name": "wrap-data",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "wrap-data",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
