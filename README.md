@@ -209,10 +209,12 @@ root.get('x.a')(10)
 var z = root.set('x.c', [], {enumerable: false})  // c is non-enumerable
 Object.keys( z.get('x')() )  // ['a']
 
-root.unwrap()  // {x: {y: {z: 1}}, a: 10}  // c is hidden!
+root.unwrap()  // {x: {y: {z: 1}}, a: 10}  // `c` is hidden!
 
 root.set(`arr.[0]`, 10)
 root.get('arr.0')()  // 10
+
+root.unwrap()  // {x: {y: {z: 1}}, a: 10, arr:[10]}  // `arr` is array!
 
 ```
 
