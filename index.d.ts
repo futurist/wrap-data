@@ -22,18 +22,16 @@ interface unwrapConfig {
     json: boolean;
 }
 
-type Path = string | string[];
-
 interface wrappedData extends Stream<any> {
-    get(path: Path): wrappedData | void;
+    get(path: string | string[]): wrappedData | void;
     set(value: any): wrappedData;
-    set(path: Path, value: any, descriptor?: object): wrappedData;
-    getset(valueFn: (any)=>any): wrappedData;
-    getset(path: Path, valueFn: (any)=>any, descriptor?: object): wrappedData;
-    ensure(path: Path, value: any, descriptor?: object): wrappedData;
-    unset(path: Path): any;
+    set(path: string | string[], value: any, descriptor?: object): wrappedData;
+    getset(valueFn: (prevVal:any)=>any): wrappedData;
+    getset(path: string | string[], valueFn: (prevVal:any)=>any, descriptor?: object): wrappedData;
+    ensure(path: string | string[], value: any, descriptor?: object): wrappedData;
+    unset(path: string | string[]): any;
     unwrap(config?: unwrapConfig): any;
-    unwrap(path: Path, config?: unwrapConfig): any;
+    unwrap(path: string | string[], config?: unwrapConfig): any;
 }
 
 declare namespace wrapData {
