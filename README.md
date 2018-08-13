@@ -192,6 +192,8 @@ z(10)
 
 `value` can be any data types, if `path` is omitted, set value into wrapped_data itself.
 
+If `value` is a **stream**, then it's an **atom data**, which will not be wrapped inside.
+
 `descriptor` is optional, same as 3rd argument of `Object.defineProperty`, this can e.g. create non-enumerable stream which will be hidden when `unwrap`.
 
 If data not exist in `path`, all intermediate object will be created.
