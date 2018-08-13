@@ -71,7 +71,7 @@ model.set('address.city', 'Mars')
 // [console] data mutated: [ 'address', 'city' ] add Mars
 model.get('address.city')('Earth')
 // [console] data mutated: [ 'address', 'city' ] change Earth
-model.unset('address.city', 'Mars')
+model.unset('address.city')
 // [console] data mutated: [ 'address', 'city' ] delete Earth
 
 // stop observe model changes
@@ -86,22 +86,22 @@ You can define data relations using `combine`, `scan` etc., and `unwrap` will un
 const firstName = model.get('firstName')
 const lastName = model.get('lastName')
 const fullName = flyd.combine(
-  (a,b)=>a()+b(),
+  (a, b) => a() + ' ' + b(),
   [firstName, lastName]
 )
 model.set('fullName', fullName)
-fullName.map(console.log)   // [console] HelloWorld
-firstName('Green')          // [console] GreenWorld
+fullName.map(console.log)   // [console] Hello World
+firstName('Green')          // [console] Green World
 
 model.set('age', flyd.stream(flyd.stream(20)))
 model.unwrap()
-// {firstName:'Green', lastName:'World', fullName:'GreenWorld', age:20}
+// {firstName:'Green', lastName:'World', fullName:'Green World', age:20}
 ```
 
 ### - **Use in React**
 
 ```js
-const model = wrapData(flyd.stream)({user: {name: 'Hello'}})
+const model = wrapData(flyd.stream)({user: {name: 'earth'}})
 
 class App extends React.Component {
     constructor(props){
@@ -109,12 +109,12 @@ class App extends React.Component {
         const {model} = this.props
         
         this.update = model.change.map(({value, type})=>{
-            console.log(type, value.unwrap())
             this.forceUpdate()
         })
-      
-        this.onChange = e=>{
-          model.set('user.name', e.target.value)
+        
+        this.onChange = e => {
+            const {name, value} = e.target
+            model.set(name, value)
         }
     }
   
@@ -126,15 +126,17 @@ class App extends React.Component {
         const {model} = this.props
         const userName = model.unwrap('user.name')
         return <div>
-            <h3>Your name: {userName}</h3>
-            <input value={userName} onChange={this.onChange} />
+            <h3>Hello {userName}</h3>
+            <input name='user.name' value={userName} onChange={this.onChange} />
         </div>
     }
 }
 
-ReactDOM.render(<App model={model} />, APP)
+ReactDOM.render(<App model={model} />, app)
 
 ```
+
+You can play with the [demo here](https://flems.io/#0=N4IghgrgLg9gSgUwDYzAExALgGZiQZwQBoRsBLJBfLAbVADswBbBLEAOgAsomkQSAxjHpQEItgB40ZAG4ACMmgC8AHXAAHdWoB8EgPTSZ2kAF8iDZq0wcAVtUHDR460Pr4ocpjDTI5SuQDuAE5g6gAiYFBgABTYSACeaOzuQQjMAJTRwBCEQZhywIws+QDkaUFQnCUmJukq9PUCSGD4+HIAgppyCAAeTmhtiGACUOwAwjBM6sJiHsD1cotyrikQIzBB0epBMOr46fP0S8dy+BDqCJvbu-sLJ4src14+SCZ+cpVk+OzXe3f3-xOn2+5zQkQQ72eyHYAk4YHoAHMEOwmKFolkZHgIMQPvELrUlNpDvd7sD2NgNgIEABVdRg0TROpHEm1QHHNlLMnCMZwxEQ-z87QFDnHR4FIo4zFIbFvAXsKJBJFQEVLKFIZIIKDRCVEORS7FMklyEyAk3MwFCKYzEQAdQoSGp9C8EBEjOJJLJoPB7DEaGiUCCBtNgMBqXoPk2BxVYuAatlH04Xx+Oz+zPuYpylwAcpZId5oS7gmiSpmguwJSVDSTUlAIEEjlJZNoVccJJwAMzaAASyBQBVLOZYJn0HebaaNcgkZHo6mgcglShLuXLlhKeqxCCU2Vyg4Qb25vKRW659B58KRbz0Y6N+kM16WZrN9SGIzCAHkALLsMMR6ISTrqJ4+ZIFucZyFeuqhOoTL8CAlrqBQlxsAARmAyHILBhCUCMZDCNQ1gAIwAJyYAArKY5ggBKbAwq0sGuE4UBsKYAC6JBINOADW+F0FRlhsKkwyjD4MjILsLAiOwdiwXWfDWNwUB7Jgeh6C66icQiMKTHogkjKpTBoDpaQjOwIlieoEmjNJJBQHiVggPgAhBGQ6hMWYFgsAJxlQAAtGgkymQgokoBZsxSfYICyWwClKSpakaVpTBGUJfnaRABnJSMqVMIFwXiWF1kgLZFxsI5zmuRRHn2XEiThTJQRySAMX4Mpqkzgllp6DVaAAAIAAzsAATOwAAcXUJEkhXFfZZUuW5lHUdYRbqH5kRgPVjXNa18WaZ1y2rVE-XsO27AEe2BhfFAejTj4PTsOlk0RdNpVOXNrEmEAA)
 
 
 ## API
