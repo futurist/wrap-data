@@ -202,14 +202,17 @@ If data not exist in `path`, all intermediate object will be created.
 var z = root.set('x.a', 10)
 z()  // 10
 
-// same as:
+// same as: (only if x.a exits)
 root.get('x.a').set(10)
+root.get('x.a')(10)
 
 var z = root.set('x.c', [], {enumerable: false})  // c is non-enumerable
 Object.keys( z.get('x')() )  // ['a']
 
-root.set(`a.[0]`, 10)
-root.get('a.0')()  // 10
+root.unwrap()  // {x: {y: {z: 1}}, a: 10}  // c is hidden!
+
+root.set(`arr.[0]`, 10)
+root.get('arr.0')()  // 10
 
 ```
 
