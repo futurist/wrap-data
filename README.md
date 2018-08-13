@@ -144,19 +144,19 @@ You can play with the [demo here](https://flems.io/#0=N4IghgrgLg9gSgUwDYzAExALgG
 #### - wrapData = require('wrap-data')
 > get the `wrapData` function
 
-*return: function(stream) -> wrapperFactory*
+*return: function(stream) -> wrapFactory*
 
-#### - wrapperFactory = wrapData(stream)
-> the `wrapperFactory` used to turn data into wrapped data
+#### - wrapFactory = wrapData(stream)
+> the `wrapFactory` used to turn data into wrapped data
 
 *return: function(data) -> wrapped_data*
 
 ```js
 var flyd = require('flyd')
-var wrapperFactory = wrapData(flyd.stream)
+var wrapFactory = wrapData(flyd.stream)
 ```
 
-#### - root = wrapperFactory(data: any)
+#### - root = wrapFactory(data: any)
 > the `root` is a *wrapped_data*, with all nested data wrapped.
 
 `root.change` is also a stream, you can `map` it to receive any data change inside.
@@ -166,7 +166,7 @@ Any data inside is `wrapped_data`, wrapped data is just a stream.
 *return: wrapped_data for `data`*
 
 ```js
-var root = wrapperFactory({x: {y: {z: 1}}})
+var root = wrapFactory({x: {y: {z: 1}}})
 root().x().y().z()  // 1
 root.change.map(({value, type})=>{ console.log(value, type) })
 root().x().y().z(2)
@@ -249,8 +249,10 @@ var z = root.unset('x.b')
 z // 5
 ```
 
-#### - wrapped_data.unwrap(path?: string|string[])
+#### - wrapped_data.unwrap(path?: string|string[], config?: {json: true})
 > unwrap data and nested data while keep data structure, any level of `wrapper` on any data will be stripped.
+
+If set `config` arg with `{json: true}`, then any circular referenced data will be set `undefined`, suitable for `JSON.stringify`.
 
 *return: unwrapped data*
 
