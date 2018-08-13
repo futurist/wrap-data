@@ -35,6 +35,10 @@ function isWrapper(obj){
   return isFunction(obj) && isFunction(obj.map)
 }
 
+function isWrappedData(obj){
+  return isWrapper(obj) && 'root' in obj && 'path' in obj && isFunction(obj.get)
+}
+
 function isPrimitive2(val) {
   return isPrimitive(val) || isWrapper(val)
 }
@@ -309,7 +313,7 @@ function _unwrap(obj, config, _cache) {
   if(isRoot) _cache = [[obj]]
   
   let result
-  let source = isWrapper(obj) ? obj() : obj
+  let source = obj
   if (isArray(source)){
     result = []
     source.forEach((val,key)=> {
@@ -321,9 +325,12 @@ function _unwrap(obj, config, _cache) {
       const val = source[key]
       _checkCacheAndUnwrap(config, _cache, val, result, key)
     })
-  } else if(isWrapper(source)) {
+  } else if(isWrappedData(source)) {
     result = _unwrap(source(), config, _cache)
   } else {
+    while (isWrapper(source)) {
+      source = source()
+    }
     result = source
   }
   if (isRoot) {
