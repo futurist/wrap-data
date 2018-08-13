@@ -23,7 +23,7 @@ npm i -S wrap-data
 
 ## Usage
 
-First you need a **stream** like helper function or library, which conforms to the [fantasy land applicative](https://github.com/fantasyland/fantasy-land#applicative) specification, [flyd](https://github.com/paldepind/flyd) is recommended.
+First you need a **stream** helper function or library, which conforms to the [fantasy land applicative](https://github.com/fantasyland/fantasy-land#applicative) specification, [flyd](https://github.com/paldepind/flyd) is recommended.
 
 ### - **Convert existing data and use wrapped data**
 
@@ -142,12 +142,12 @@ You can play with the [demo here](https://flems.io/#0=N4IghgrgLg9gSgUwDYzAExALgG
 ## API
 
 #### - wrapData = require('wrap-data')
-> get the `wrapData` function
-
-*return: function(stream) -> wrapFactory*
+> The lib expose a default `wrapData` function to use
 
 #### - wrapFactory = wrapData(stream)
-> the `wrapFactory` used to turn data into wrapped data
+> the `wrapFactory` is used to turn data into *wrapped_data*.
+
+A `wrapped_data` is just a stream, with some helper methods added to it, like `get`, `set` etc.
 
 *return: function(data) -> wrapped_data*
 
@@ -159,11 +159,14 @@ var wrapFactory = wrapData(flyd.stream)
 #### - root = wrapFactory(data: any)
 > the `root` is a *wrapped_data*, with all nested data wrapped.
 
-`root.change` is also a stream, you can `map` it to receive any data change inside.
-
-Any data inside is `wrapped_data`, wrapped data is just a stream.
-
 *return: wrapped_data for `data`*
+
+`root.change` is also a stream, you can `map` it to receive any data changes inside.
+
+Any data inside root is a `wrapped_data`, and may be contained by `{}` or `[]` stream, keep the same structure as before.
+
+Any `wrapped_data` have `root` and `path` propperties, `get`, `set`, ... helper functions.
+
 
 ```js
 var root = wrapFactory({x: {y: {z: 1}}})
@@ -175,7 +178,7 @@ root().x().y().z(2)
 #### - wrapped_data.get(path: string|string[])
 > get nested wrapped data from path, path is array of string or dot(`"."`) seperated string.
 
-*return: wrapped_data for `value`*
+*return: wrapped_data at `path`*
 
 ```js
 var z = root.get('x.y.z')
@@ -186,9 +189,11 @@ z(10)
 ```
 
 #### - wrapped_data.set(path?: string|string[], value?: any, descriptor?: object)
-> set nested wrapped data value from path, same rule as `get` method.
+> set nested wrapped data value from path, same rule as `get` method. The `descriptor` only applied when path not exists.
 
-`path` can contain `a.[3]` like string denote `3` is array element of `a`.
+*return: wrapped_data for `value`, at `path`*
+
+`path` can contain `a.[3]` alike string denote `3` is an array element of `a`.
 
 `value` can be any data types, if `path` is omitted, set value into wrapped_data itself.
 
@@ -197,8 +202,6 @@ If `value` is a **stream**, then it's an **atom data**, which will not be wrappe
 `descriptor` is optional, same as 3rd argument of `Object.defineProperty`, this can e.g. create non-enumerable stream which will be hidden when `unwrap`.
 
 If data not exist in `path`, all intermediate object will be created.
-
-*return: wrapped_data for `value`*
 
 ```js
 var z = root.set('x.a', 10)
@@ -223,13 +226,17 @@ root.unwrap()  // {x: {y: {z: 1}}, a: 10, arr:[10]}  // `arr` is array!
 #### - wrapped_data.getset(path?: string|string[], function(prevValue, empty?: boolean)->newValue, descriptor: object)
 > like `set`, but value is from a function, it let you set `value` based on previous value, the `descriptor` only applied when `empty` is `true`.
 
+*return: wrapped_data for `newValue`, at `path`*
+
 ```js
 var z = root.getset('x.a', val=>val+1)
 z()  // 11
 ```
 
 #### - wrapped_data.ensure(path: string|string[], value?: any, descriptor?: object)
-> like `set`, but only `set` when the path is empty, otherwise perform a `get` operation.
+> like `set`, but only `set` when the path **not exists**, otherwise perform a `get` operation.
+
+*return: wrapped_data at `path`*
 
 ```js
 var z = root.ensure('x.a', 5)
@@ -244,7 +251,7 @@ z()  // 5
 #### - wrapped_data.unset(path: string|string[])
 > delete `wrapped_data` or `value` in `path`
 
-*return: deleted data*
+*return: deleted data been **unwrapped***
 
 ```js
 var z = root.unset('x.b')
@@ -278,7 +285,7 @@ z.get('d.0.v')()  // 10
 #### - wrapped_array.pop()
 > pop and unwrap last element in wrapped array.
 
-*return: unwrapped_data in last array element*
+*return: **unwrapped data** in last array element*
 
 ```js
 var z = root.ensure('d', [])

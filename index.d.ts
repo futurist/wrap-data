@@ -23,6 +23,8 @@ interface unwrapConfig {
 }
 
 interface wrappedData extends Stream<any> {
+    root: wrappedData;
+    path: string[];
     get(path: string | string[]): wrappedData | void;
     set(value: any): wrappedData;
     set(path: string | string[], value: any, descriptor?: object): wrappedData;
