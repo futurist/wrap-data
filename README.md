@@ -2,7 +2,7 @@
 Wrap data object into reactive streams, with helpers like unwrap, get, set, unset etc.
 
 [![Build Status](https://travis-ci.org/futurist/wrap-data.svg?branch=master)](https://travis-ci.org/futurist/wrap-data)
-[![NPM Version](https://img.shields.io/npm/v/wrap-data.svg)](https://www.npmjs.com/package/wrap-data)
+[![NPM Version](https://img.shields.io/npm/v/wrap-data.svg)](https://www.npmjs.com/package/wrap-data) [![Join the chat at https://gitter.im/wrap-data/Lobby](https://badges.gitter.im/wrap-data/Lobby.svg)](https://gitter.im/wrap-data/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Install
 
