@@ -49,24 +49,26 @@ const ignoreFirstCall = fn => {
   }
 }
 
+function makeChange (_callback) {
+  let oldMap = _callback.map
+  _callback.count = 0
+  _callback.map = function(fn) {
+    const _fn = _callback.count>0 ? ignoreFirstCall(fn) : fn
+    return oldMap.call(this, _fn)
+  }
+  return _callback
+}
+
 function wrapData(wrapper) {
 
   return source => {
     let finished = 0
     let root
-    let _callback = wrapper()
-    let changeCount = 0
     let _cache = null
-    let cb = (value, type) => finished && root!=null && !root.skip && ++changeCount>0 && _callback({value, type})
+    let cb = (value, type) => finished && root!=null && !root.skip && ++root.change.count>0 && root.change({value, type})
 
     root = createWrap(source, [])
-    
-    let oldMap = _callback.map
-    _callback.map = function(fn) {
-      const _fn = changeCount>0 ? ignoreFirstCall(fn) : fn
-      return oldMap.call(this, _fn)
-    }
-    root.change = _callback
+    root.change = makeChange(wrapper())
 
     function bindMethods(packer, path, type='change') {
       if('path' in packer && 'root' in packer) return packer
@@ -74,7 +76,7 @@ function wrapData(wrapper) {
       packer.root = root
       packer.path = path
       packer.map(v => cb(packer, type))
-      type = 'change'
+      // type = 'change'
       packer.get = get
       packer.got = got
       packer.set = set
