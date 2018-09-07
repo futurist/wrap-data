@@ -1,4 +1,3 @@
-/*jslint node: true */
 'use strict'
 
 const { assign, keys, getPrototypeOf } = Object
@@ -7,50 +6,49 @@ const { isArray } = Array
 const arrayKeyRegEx = /^\[(\w+)\]$/
 
 // https://github.com/sindresorhus/is-plain-obj
-function isPOJO(x) {
-  var prototype;
-	return toString.call(x) === '[object Object]' && (prototype = getPrototypeOf(x), prototype === null || prototype === getPrototypeOf({}));
+function isPOJO (x) {
+  var prototype
+  return toString.call(x) === '[object Object]' && (prototype = getPrototypeOf(x), prototype === null || prototype === getPrototypeOf({}))
 }
 
-function isFunction(obj) {
+function isFunction (obj) {
   return typeof obj === 'function'
 }
 
-function isPrimitive(val) {
+function isPrimitive (val) {
   return val == null || (typeof val !== 'function' && typeof val !== 'object')
 }
 
-function getPath(path) {
+function getPath (path) {
   if (typeof path === 'string') path = path.split('.')
   return (isArray(path) ? path : [path]).map(getPathType)
 }
 
-function getPathType(p){
-  if(isArray(p)) return p
+function getPathType (p) {
+  if (isArray(p)) return p
   const match = arrayKeyRegEx.exec(p)
-  return match!=null ? ['array', match[1]] : ['', p]
+  return match != null ? ['array', match[1]] : ['', p]
 }
 
-function isWrapper(obj){
+function isWrapper (obj) {
   return isFunction(obj) && isFunction(obj.map)
 }
 
-function isWrappedData(obj){
+function isWrappedData (obj) {
   return isWrapper(obj) && 'root' in obj && 'path' in obj && isFunction(obj.get)
 }
 
-function isPrimitive2(val) {
+function isPrimitive2 (val) {
   return isPrimitive(val) || isWrapper(val)
 }
 const ignoreFirstCall = fn => {
   let calledOnce = false
-  return function(arg) {
+  return function (arg) {
     return calledOnce ? fn.call(this, arg) : calledOnce = true
   }
 }
 
-function wrapData(wrapper) {
-
+function wrapData (wrapper) {
   return source => {
     let root
     let _cache = null
@@ -61,17 +59,17 @@ function wrapData(wrapper) {
       const _callback = wrapper()
       let oldMap = _callback.map
       _callback.count = 0
-      _callback.map = function(fn) {
-        const _fn = _callback.count>0 ? ignoreFirstCall(fn) : fn
+      _callback.map = function (fn) {
+        const _fn = _callback.count > 0 ? ignoreFirstCall(fn) : fn
         return oldMap.call(this, _fn)
       }
-      _callback.callback = (value, type) => !root.skip && ++_callback.count>0 && _callback({value, type})
+      _callback.callback = (value, type) => !root.skip && ++_callback.count > 0 && _callback({ value, type })
       packer.change = _callback
       return packer
     }
 
-    function bindMethods(packer, path, type='change') {
-      if('path' in packer && 'root' in packer) return packer
+    function bindMethods (packer, path, type = 'change') {
+      if ('path' in packer && 'root' in packer) return packer
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packer.root = root
       packer.path = path
@@ -84,14 +82,14 @@ function wrapData(wrapper) {
       packer.ensure = ensure
       packer.unset = unset
       packer.unwrap = unwrap
-      if(isArray(packer())){
+      if (isArray(packer())) {
         packer.push = push
         packer.pop = pop
       }
       return packer
     }
 
-    function createWrap(source, prevPath = []) {
+    function createWrap (source, prevPath = []) {
       let packer = makeChange(wrapper())
       const isRoot = _cache == null
       if (isRoot) {
@@ -101,16 +99,16 @@ function wrapData(wrapper) {
       }
 
       if (isPrimitive2(source)) {
-        packer = bindMethods(wrapper(source), prevPath)
+        packer = bindMethods(makeChange(wrapper(source)), prevPath)
         return packer
       }
-      
+
       const target = isArray(source) ? [] : isPOJO(source) ? {} : source
       packer(deepIt(target, source, (a, b, key, path) => {
         const _path = path.concat(key)
         const bval = b[key]
-        if (bval === undefined) a[key] = wrapper()
-        else if (isPrimitive2(bval)) a[key] = wrapper(bval)
+        if (bval === undefined) a[key] = makeChange(wrapper())
+        else if (isPrimitive2(bval)) a[key] = makeChange(wrapper(bval))
         else {
           const prev = _cache.find(function (v) { return v[0] === bval })
           if (prev == null) {
@@ -128,7 +126,7 @@ function wrapData(wrapper) {
           bindMethods(a[key], _path)
         }
       }, prevPath))
-      
+
       const ret = bindMethods(packer, prevPath)
 
       if (isRoot) {
@@ -142,11 +140,10 @@ function wrapData(wrapper) {
       return ret
     }
 
-
-    function deepIt(a, b, callback, path) {
+    function deepIt (a, b, callback, path) {
       _cache = isArray(_cache) ? _cache : []
       path = isArray(path) ? path : []
-      if (isPrimitive2(b)) return bindMethods(wrapper(a), path)
+      if (isPrimitive2(b)) return bindMethods(makeChange(wrapper(a)), path)
       for (let key in b) {
         if (!hasOwnProperty.call(b, key)) continue
         // return false stop the iteration
@@ -169,16 +166,16 @@ function wrapData(wrapper) {
       return a
     }
 
-    function get(path, cb, bubble) {
+    function get (path, cb, bubble) {
       let obj = this
       let n = obj
       path = getPath(path)
-      if(bubble) path = path.reverse()
+      if (bubble) path = path.reverse()
       for (let i = 0, len = path.length; i < len; i++) {
         if (!isWrapper(n)) {
           return
         }
-        if(cb && cb(n)===false) return
+        if (cb && cb(n) === false) return
         n = n()[path[i][1]]
       }
       return n
@@ -186,11 +183,11 @@ function wrapData(wrapper) {
 
     function got (path) {
       const stream = this.get(path)
-      return assign({stream},  stream != null && {value: isWrapper(stream) ? stream.unwrap() : stream})
+      return assign({ stream }, stream != null && { value: isWrapper(stream) ? stream.unwrap() : stream })
     }
 
     // ensure path exists
-    function ensure(path, defaultValue, descriptor) {
+    function ensure (path, defaultValue, descriptor) {
       let obj = this
       let val = obj.get(path)
       if (val == null) {
@@ -198,55 +195,55 @@ function wrapData(wrapper) {
       }
       return val
     }
-    
-    function set(path, value, descriptor) {
-      if(arguments.length<=1) {
+
+    function set (path, value, descriptor) {
+      if (arguments.length <= 1) {
         value = path
         path = []
       }
-      const func = ()=>value
+      const func = () => value
       return getset.call(this, path, func, descriptor)
     }
 
-    function getset(path, func, descriptor) {
+    function getset (path, func, descriptor) {
       let obj = this
-      if(arguments.length<=1 && isFunction(path)) {
+      if (arguments.length <= 1 && isFunction(path)) {
         func = path
         path = []
       }
-      
+
       path = getPath(path)
       if (!isWrapper(obj)) return obj
 
       let value, action
-      let i, len, t, nextT, p, n = obj()
+      let i; let len; let t; let nextT; let p; let n = obj()
       root.skip = true
-      
-      if(!path.length){
+
+      if (!path.length) {
         obj(createWrap(func(obj.unwrap()), obj.path.slice())())
         value = obj
         action = 'change'
       } else {
-        const _path = path.map(v=>v[1])
+        const _path = path.map(v => v[1])
         for (i = 0, len = path.length - 1; i < len; i++) {
           ;[t, p] = path[i]
-          ;[nextT] = path[i+1]
+          ;[nextT] = path[i + 1]
           if (!isWrapper(n[p])) {
-            n[p] = bindMethods(wrapper(nextT==='array' ? [] : {}), _path.slice(0, i + 1))
+            n[p] = bindMethods(makeChange(wrapper(nextT === 'array' ? [] : {})), _path.slice(0, i + 1))
           }
           n = n[p]()
         }
         ;[t, p] = path[i]
-        if(isWrapper(n[p])){
+        if (isWrapper(n[p])) {
           n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path))())
           value = n[p]
           action = 'change'
         } else {
           value = createWrap(func(n[p], true), obj.path.concat(_path))
-          if(isPrimitive(descriptor)) {
+          if (isPrimitive(descriptor)) {
             n[p] = value
-          }else{
-            Object.defineProperty(n, p, assign({value}, descriptor))
+          } else {
+            Object.defineProperty(n, p, assign({ value }, descriptor))
           }
           action = 'add'
         }
@@ -257,7 +254,7 @@ function wrapData(wrapper) {
       return value
     }
 
-    function unset(path) {
+    function unset (path) {
       let obj = this
 
       path = getPath(path)
@@ -267,44 +264,43 @@ function wrapData(wrapper) {
       if (val == null) return
       let parent = val()
       let [t, p] = path[len - 1]
-      if(!(p in parent)) return
+      if (!(p in parent)) return
       let deleteVal = parent[p]
       delete parent[p]
       root.change.callback(deleteVal, 'delete')
       return isWrapper(deleteVal) ? deleteVal.unwrap() : deleteVal
     }
 
-    function push(value) {
+    function push (value) {
       let len = this().length
       return this.set(len, value)
     }
 
-    function pop() {
+    function pop () {
       let len = this().length
-      let val = this.unset(len-1)
+      let val = this.unset(len - 1)
       this().pop()
       return val
     }
 
-    function unwrap(path, config={}) {
-      if(arguments.length===1 && isPOJO(path)) {
+    function unwrap (path, config = {}) {
+      if (arguments.length === 1 && isPOJO(path)) {
         config = path
         path = null
       }
-      return _unwrap(path!=null ? this.get(path) : this, config)
+      return _unwrap(path != null ? this.get(path) : this, config)
     }
 
     return root
   }
 }
 
-
-function _checkCacheAndUnwrap(config, _cache, val, result, key) {
-  const prev = _cache.find(v=>v[0]===val)
-  if(prev != null) {
-    !config.json && prev.push(()=>{
+function _checkCacheAndUnwrap (config, _cache, val, result, key) {
+  const prev = _cache.find(v => v[0] === val)
+  if (prev != null) {
+    !config.json && prev.push(() => {
       const [_, r, k] = prev
-      result[key] = k==null ? r : r[k]
+      result[key] = k == null ? r : r[k]
     })
   } else {
     _cache.push([val, result, key])
@@ -313,24 +309,24 @@ function _checkCacheAndUnwrap(config, _cache, val, result, key) {
   return prev
 }
 
-function _unwrap(obj, config, _cache) {
-  let isRoot = _cache==null
-  if(isRoot) _cache = [[obj]]
-  
+function _unwrap (obj, config, _cache) {
+  let isRoot = _cache == null
+  if (isRoot) _cache = [[obj]]
+
   let result
   let source = obj
-  if (isArray(source)){
+  if (isArray(source)) {
     result = []
-    source.forEach((val,key)=> {
+    source.forEach((val, key) => {
       _checkCacheAndUnwrap(config, _cache, val, result, key)
     })
-  } else if(isPOJO(source)){
+  } else if (isPOJO(source)) {
     result = {}
     keys(source).forEach(key => {
       const val = source[key]
       _checkCacheAndUnwrap(config, _cache, val, result, key)
     })
-  } else if(isWrappedData(source)) {
+  } else if (isWrappedData(source)) {
     result = _unwrap(source(), config, _cache)
   } else {
     while (isWrapper(source)) {
@@ -349,4 +345,3 @@ function _unwrap(obj, config, _cache) {
 }
 
 module.exports = wrapData
-
