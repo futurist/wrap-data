@@ -49,33 +49,31 @@ const ignoreFirstCall = fn => {
   }
 }
 
-function makeChange (_callback) {
-  let oldMap = _callback.map
-  _callback.count = 0
-  _callback.map = function(fn) {
-    const _fn = _callback.count>0 ? ignoreFirstCall(fn) : fn
-    return oldMap.call(this, _fn)
-  }
-  return _callback
-}
-
 function wrapData(wrapper) {
 
   return source => {
-    let finished = 0
     let root
     let _cache = null
-    let cb = (value, type) => finished && root!=null && !root.skip && ++root.change.count>0 && root.change({value, type})
 
     root = createWrap(source, [])
-    root.change = makeChange(wrapper())
+
+    function makeChange (_callback) {
+      let oldMap = _callback.map
+      _callback.count = 0
+      _callback.map = function(fn) {
+        const _fn = _callback.count>0 ? ignoreFirstCall(fn) : fn
+        return oldMap.call(this, _fn)
+      }
+      _callback.callback = (value, type) => !root.skip && ++_callback.count>0 && _callback({value, type})
+      return _callback
+    }
 
     function bindMethods(packer, path, type='change') {
       if('path' in packer && 'root' in packer) return packer
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packer.root = root
       packer.path = path
-      packer.map(v => cb(packer, type))
+      packer.map(v => root.change.callback(packer, type))
       // type = 'change'
       packer.get = get
       packer.got = got
@@ -97,6 +95,8 @@ function wrapData(wrapper) {
       if (isRoot) {
         _cache = [[source, packer, null]]
         root = packer
+        root.skip = true
+        root.change = makeChange(wrapper())
       }
 
       if (isPrimitive2(source)) {
@@ -136,7 +136,7 @@ function wrapData(wrapper) {
             v[3]()
           }
         })
-        finished = 1
+        root.skip = false
       }
       return ret
     }
@@ -168,14 +168,16 @@ function wrapData(wrapper) {
       return a
     }
 
-    function get(path) {
+    function get(path, cb, bubble) {
       let obj = this
       let n = obj
       path = getPath(path)
+      if(bubble) path = path.reverse()
       for (let i = 0, len = path.length; i < len; i++) {
         if (!isWrapper(n)) {
           return
         }
+        if(cb && cb(n)===false) return
         n = n()[path[i][1]]
       }
       return n
@@ -217,7 +219,7 @@ function wrapData(wrapper) {
 
       let value, action
       let i, len, t, nextT, p, n = obj()
-      finished = 0
+      root.skip = true
       
       if(!path.length){
         obj(createWrap(func(obj.unwrap()), obj.path.slice())())
@@ -248,8 +250,8 @@ function wrapData(wrapper) {
           action = 'add'
         }
       }
-      finished = 1
-      cb(value, action)
+      root.skip = false
+      root.change.callback(value, action)
 
       return value
     }
@@ -267,7 +269,7 @@ function wrapData(wrapper) {
       if(!(p in parent)) return
       let deleteVal = parent[p]
       delete parent[p]
-      cb(deleteVal, 'delete')
+      root.change.callback(deleteVal, 'delete')
       return isWrapper(deleteVal) ? deleteVal.unwrap() : deleteVal
     }
 
