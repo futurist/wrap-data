@@ -57,7 +57,8 @@ function wrapData(wrapper) {
 
     root = createWrap(source, [])
 
-    function makeChange (_callback) {
+    function makeChange (packer) {
+      const _callback = wrapper()
       let oldMap = _callback.map
       _callback.count = 0
       _callback.map = function(fn) {
@@ -65,7 +66,8 @@ function wrapData(wrapper) {
         return oldMap.call(this, _fn)
       }
       _callback.callback = (value, type) => !root.skip && ++_callback.count>0 && _callback({value, type})
-      return _callback
+      packer.change = _callback
+      return packer
     }
 
     function bindMethods(packer, path, type='change') {
@@ -90,13 +92,12 @@ function wrapData(wrapper) {
     }
 
     function createWrap(source, prevPath = []) {
-      let packer = wrapper()
+      let packer = makeChange(wrapper())
       const isRoot = _cache == null
       if (isRoot) {
         _cache = [[source, packer, null]]
         root = packer
         root.skip = true
-        root.change = makeChange(wrapper())
       }
 
       if (isPrimitive2(source)) {
