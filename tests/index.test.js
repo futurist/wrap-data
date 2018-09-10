@@ -338,4 +338,16 @@ it('set descriptor', () => {
   })
 })
 
+it('change bubble', () => {
+  var spy = it.spy()
+  var w = wrapData(mithirlStream)
+  var d = w({
+    a: 1, b: { c: 2 }
+  })
+  d.change.map(spy)
+  d.get('b.c').change.map(spy)
+  d.set('b.c', 3)
+  it(spy.callCount).equals(1)
+})
+
 if (require.main === module) it.run()
