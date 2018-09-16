@@ -193,7 +193,7 @@ it('object test', () => {
 
   try {
     var ss = d.ensure('a.v.z', 234)
-  }catch (e) {
+  } catch (e) {
     // TypeError: Cannot create property 'z' on number '10'
     var err = e
   }
@@ -338,16 +338,18 @@ it('set descriptor', () => {
   })
 })
 
-it('change bubble', () => {
+it('model slice', () => {
   var spy = it.spy()
   var w = wrapData(mithirlStream)
   var d = w({
     a: 1, b: { c: 2 }
   })
   d.change.map(spy)
-  d.get('b').change.map(spy)
+  d.slice('b.c').change.map(spy)
   d.set('b.c', 3)
-  it(spy.callCount).equals(1)
+  it(spy.callCount).equals(2)
+  d.set('a', 2)
+  it(spy.callCount).equals(3)
 })
 
 if (require.main === module) it.run()

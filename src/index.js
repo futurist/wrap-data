@@ -52,8 +52,22 @@ function wrapData (wrapper) {
   return source => {
     let root
     let _cache = null
-
     root = createWrap(source, [])
+
+    function sliceRoot (path, filter) {
+      const part = makeChange(root.get(path))
+      const { change } = part
+      if (!isFunction(filter)) {
+        filter = (value) => value.path.join('.')
+          .indexOf(isArray(path) ? path.join('.') : path) === 0
+      }
+      root.change.map(({ value, type }) => {
+        if (filter(value, type)) {
+          change.callback(value, type)
+        }
+      })
+      return part
+    }
 
     function makeChange (packer) {
       const _change = wrapper()
@@ -101,6 +115,7 @@ function wrapData (wrapper) {
         _cache = [[source, packer, null]]
         root = packer
         root.skip = true
+        root.slice = sliceRoot
       }
 
       if (isPrimitive2(source)) {
