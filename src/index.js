@@ -67,12 +67,6 @@ function wrapData (wrapper) {
         if (!root.skip) {
           _change.count++
           _change({ value, type })
-          const { path } = packer
-          let obj = root
-          for (let i = 0; i < path.length - 1; i++) {
-            obj.change.callback(value, type)
-            obj = obj()[path[i]]
-          }
         }
       }
       packer.change = _change
@@ -84,7 +78,7 @@ function wrapData (wrapper) {
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packer.root = root
       packer.path = path
-      packer.map(v => packer.change.callback(packer, type))
+      packer.map(v => root.change.callback(packer, type))
       // type = 'change'
       packer.get = get
       packer.got = got
