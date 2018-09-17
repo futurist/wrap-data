@@ -189,13 +189,17 @@ z(10)
 ```
 
 #### - wrapped_data.slice(path: string|string[], filter?: (value, type):boolean, wrapper = root)
-> like `get`, get nested wrapped data from path, and attach a `change` stream to it that filtered from `(wrapper||root).change` stream, the default filter is to test if the `root.path` starts with path.
+> get nested wrapped data from path, and attach a `change` stream to it that filtered from `(wrapper||root).change` stream, the default filter is to test if the `root.path` starts with path.
 
-*return: wrapped_data at `path`*
+*return: `wrapped_data.change` stream*
+
+The changed value has `_path` array to reflect the sub path of the sliced data.
 
 ```js
-var z = root.slice('x.y.z')
-z.change.map(val=>console.log('z changed!'))
+var xy = root.slice('x.y')
+xy.change.map(({value, type})=>console.log('x.y changed!', value._path))
+xy.set('z', 1)
+// x.y changed! ['z']
 ```
 
 #### - wrapped_data.set(path?: string|string[], value?: any, descriptor?: object)

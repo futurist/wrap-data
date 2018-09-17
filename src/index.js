@@ -57,14 +57,19 @@ function wrapData (wrapper) {
     function slice (path, filter, wrapper) {
       const obj = this
       const part = makeChange(obj.get(path))
+      if (!isWrapper(part)) return part
       const { change } = part
+      const target = wrapper || root
+      const { path: rootPath } = target
+      const subPath = getPath(path).map(v => v[1])
       if (!isFunction(filter)) {
-        filter = (value) => value.path.join('.')
-          .indexOf(isArray(path) ? path.join('.') : path) === 0
+        filter = (value) => value.path.join().indexOf(subPath.join()) === 0
       }
-      const _change = (wrapper || root).change.map(({ value, type }) => {
+      const _change = target.change.map(({ value, type }) => {
         if (filter(value, type)) {
-          change.callback(value, type)
+          change.callback(assign(value, {
+            _path: value.path.slice(subPath.length)
+          }), type)
         }
       })
       change.end.map(_change.end)
@@ -72,6 +77,7 @@ function wrapData (wrapper) {
     }
 
     function makeChange (packer) {
+      if (!isWrapper(packer)) return packer
       const _change = wrapper()
       let oldMap = _change.map
       _change.count = 0
@@ -97,6 +103,7 @@ function wrapData (wrapper) {
       packer.map(v => root.change.callback(packer, type))
       // type = 'change'
       packer.get = get
+      packer.slice = slice
       packer.got = got
       packer.set = set
       packer.getset = getset
@@ -117,7 +124,6 @@ function wrapData (wrapper) {
         _cache = [[source, packer, null]]
         root = packer
         root.skip = true
-        root.slice = slice
       }
 
       if (isPrimitive2(source)) {
