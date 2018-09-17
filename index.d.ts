@@ -25,7 +25,12 @@ interface unwrapConfig {
 interface wrappedData extends Stream<any> {
     root: wrappedData;
     path: string[];
-    get(path: string | string[]): wrappedData | void;
+    slice(
+        path: string | string[],
+        filter?: (value: wrappedData, type: string) => boolean,
+        wrapper?: wrappedData
+    ): wrappedData | any;
+    get(path: string | string[]): wrappedData | any;
     set(value: any): wrappedData;
     set(path: string | string[], value: any, descriptor?: object): wrappedData;
     getset(valueFn: (prevVal:any)=>any): wrappedData;
