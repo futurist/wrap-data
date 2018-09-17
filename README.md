@@ -188,6 +188,16 @@ z() //2
 z(10)
 ```
 
+#### - wrapped_data.slice(path: string|string[], filter?: (value, type):boolean, wrapper = root)
+> like `get`, get nested wrapped data from path, and attach a `change` stream to it that filtered from `(wrapper||root).change` stream, the default filter is to test if the `root.path` starts with path.
+
+*return: wrapped_data at `path`*
+
+```js
+var z = root.slice('x.y.z')
+z.change.map(val=>console.log('z changed!'))
+```
+
 #### - wrapped_data.set(path?: string|string[], value?: any, descriptor?: object)
 > set nested wrapped data value from path, same rule as `get` method. The `descriptor` only applied when path not exists.
 

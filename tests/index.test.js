@@ -345,11 +345,16 @@ it('model slice', () => {
     a: 1, b: { c: 2 }
   })
   d.change.map(spy)
-  d.slice('b.c').change.map(spy)
+  var bc = d.slice('b.c')
+  bc.change.map(spy)
   d.set('b.c', 3)
   it(spy.callCount).equals(2)
   d.set('a', 2)
   it(spy.callCount).equals(3)
+  // end bc.change
+  bc.change.end(true)
+  bc(4)
+  it(spy.callCount).equals(4)
 })
 
 if (require.main === module) it.run()
