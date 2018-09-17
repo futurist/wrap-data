@@ -67,9 +67,9 @@ function wrapData (wrapper) {
       }
       const _change = target.change.map(({ value, type }) => {
         if (filter(value, type)) {
-          change.callback(assign(value, {
-            _path: value.path.slice(subPath.length)
-          }), type)
+          change.callback(value, type, {
+            path: value.path.slice(subPath.length)
+          })
         }
       })
       change.end.map(_change.end)
@@ -85,10 +85,10 @@ function wrapData (wrapper) {
         const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
         return oldMap.call(this, _fn)
       }
-      _change.callback = (value, type) => {
+      _change.callback = (value, type, data) => {
         if (!root.skip) {
           _change.count++
-          _change({ value, type })
+          _change(assign({ value, type }, data))
         }
       }
       packer.change = _change

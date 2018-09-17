@@ -347,8 +347,8 @@ it('model slice', () => {
   d.change.map(spy)
   var bc = d.slice('b.c')
   bc.change.map(spy)
-  d.slice('b').change.map(({ value }) => {
-    it(value._path).deepEquals(['c'])
+  d.slice('b').change.map(({ value, path }) => {
+    it(path).deepEquals(['c'])
   })
   d.set('b.c', 3)
   it(spy.callCount).equals(2)

@@ -193,11 +193,11 @@ z(10)
 
 *return: `wrapped_data.change` stream*
 
-The changed value has `_path` array to reflect the sub path of the sliced data.
+The `wrapped_data.change` stream's value has `path` property to reflect the sub path of the sliced data.
 
 ```js
 var xy = root.slice('x.y')
-xy.change.map(({value, type})=>console.log('x.y changed!', value._path))
+xy.change.map(({value, path})=>console.log('x.y changed!', path))
 xy.set('z', 1)
 // x.y changed! ['z']
 ```
