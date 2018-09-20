@@ -65,8 +65,8 @@ function wrapData (wrapper) {
       if (!isFunction(filter)) {
         filter = (value) => value.path.join().indexOf(subPath.join()) === 0
       }
-      const _change = target.change.map(({ value, type }) => {
-        if (filter(value, type)) {
+      const _change = target.change.map(({ value, type, path }) => {
+        if (filter({ value, type, path })) {
           change.callback(value, type, {
             path: value.path.slice(subPath.length)
           })
@@ -88,6 +88,9 @@ function wrapData (wrapper) {
       _change.callback = (value, type, data) => {
         if (!root.skip) {
           _change.count++
+          if (data == null) {
+            data = { path: value.path }
+          }
           _change(assign({ value, type }, data))
         }
       }

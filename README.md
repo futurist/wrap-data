@@ -63,8 +63,8 @@ The root `model` has a `change` stream, you can get callback from every data cha
 
 ```js
 // start observe model changes
-const update = model.change.map(({value, type})=>{
-    console.log('data mutated:', value.path, type, value.unwrap())
+const update = model.change.map(({value, type, path})=>{
+    console.log('data mutated:', path, type, value.unwrap())
 })
 
 model.set('address.city', 'Mars')
@@ -108,7 +108,7 @@ class App extends React.Component {
         super(props)
         const {model} = this.props
         
-        this.update = model.change.map(({value, type})=>{
+        this.update = model.change.map(({value, type, path})=>{
             this.forceUpdate()
         })
         
@@ -171,7 +171,7 @@ Any `wrapped_data` have `root` and `path` propperties, `get`, `set`, ... helper 
 ```js
 var root = wrapFactory({x: {y: {z: 1}}})
 root().x().y().z()  // 1
-root.change.map(({value, type})=>{ console.log(value, type) })
+root.change.map(({value, type, path})=>{ console.log(type, path) })
 root().x().y().z(2)
 ```
 
@@ -188,7 +188,7 @@ z() //2
 z(10)
 ```
 
-#### - wrapped_data.slice(path: string|string[], filter?: (value, type):boolean, wrapper = root)
+#### - wrapped_data.slice(path: string|string[], filter?: ({value, type, path}):boolean, wrapper = root)
 > get nested wrapped data from path, and attach a `change` stream to it that filtered from `(wrapper||root).change` stream, the default filter is to test if the `root.path` starts with path.
 
 *return: `wrapped_data.change` stream*
@@ -197,7 +197,7 @@ The `wrapped_data.change` stream's value has `path` property to reflect the sub 
 
 ```js
 var xy = root.slice('x.y')
-xy.change.map(({value, path})=>console.log('x.y changed!', path))
+xy.change.map(({value, type, path})=>console.log(type, path))
 xy.set('z', 1)
 // x.y changed! ['z']
 ```

@@ -345,6 +345,15 @@ it('model slice', () => {
     a: 1, b: { c: 2 }
   })
   d.change.map(spy)
+  const values = [
+    [ 'b', 'c' ],
+    ['a'],
+    [ 'b', 'c' ]
+  ]
+  d.change.map(({ value, type, path }) => {
+    it(type).equals('change')
+    it(path).deepEquals(values.shift())
+  })
   var bc = d.slice('b.c')
   bc.change.map(spy)
   d.slice('b').change.map(({ value, path }) => {
