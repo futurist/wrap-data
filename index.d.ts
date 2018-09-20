@@ -22,12 +22,19 @@ interface unwrapConfig {
     json: boolean;
 }
 
+interface IChangeStreamValue {
+    value: wrappedData,
+    type: 'change'|'delete'|'add',
+    path: string[]
+}
+
 interface wrappedData extends Stream<any> {
     root: wrappedData;
     path: string[];
+    change: Stream<IChangeStreamValue>;
     slice(
         path: string | string[],
-        filter?: (value: wrappedData, type: string) => boolean,
+        filter?: (data: IChangeStreamValue) => boolean,
         wrapper?: wrappedData
     ): wrappedData | any;
     get(path: string | string[]): wrappedData | any;
