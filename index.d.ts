@@ -48,12 +48,8 @@ interface wrappedData extends Stream<any> {
     unwrap(path: string | string[], config?: unwrapConfig): any;
 }
 
-declare namespace wrapData {
-    const f: wrapFactory;
-    export = f;
-}
+declare const wrapData: wrapFactory;
 
 declare module 'wrap-data' {
-    const f: wrapFactory;
-    export = f;
+    export = wrapData;
 }

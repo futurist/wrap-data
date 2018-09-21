@@ -67,7 +67,7 @@ function wrapData (wrapper) {
       }
       const _change = target.change.map(({ value, type, path }) => {
         if (filter({ value, type, path })) {
-          change.callback(value, type, {
+          change.emit(value, type, {
             path: value.path.slice(subPath.length)
           })
         }
@@ -85,7 +85,7 @@ function wrapData (wrapper) {
         const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
         return oldMap.call(this, _fn)
       }
-      _change.callback = (value, type, data) => {
+      _change.emit = (value, type, data) => {
         if (!root.skip) {
           _change.count++
           if (data == null) {
@@ -103,7 +103,7 @@ function wrapData (wrapper) {
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packer.root = root
       packer.path = path
-      packer.map(v => root.change.callback(packer, type))
+      packer.map(v => root.change.emit(packer, type))
       // type = 'change'
       packer.get = get
       packer.slice = slice
@@ -121,16 +121,16 @@ function wrapData (wrapper) {
     }
 
     function createWrap (source, prevPath = []) {
-      let packer = makeChange(wrapper())
+      let packer = wrapper()
       const isRoot = _cache == null
       if (isRoot) {
         _cache = [[source, packer, null]]
-        root = packer
+        root = makeChange(packer)
         root.skip = true
       }
 
       if (isPrimitive2(source)) {
-        packer = bindMethods(makeChange(wrapper(source)), prevPath)
+        packer = bindMethods(wrapper(source), prevPath)
         return packer
       }
 
@@ -138,8 +138,8 @@ function wrapData (wrapper) {
       packer(deepIt(target, source, (a, b, key, path) => {
         const _path = path.concat(key)
         const bval = b[key]
-        if (bval === undefined) a[key] = makeChange(wrapper())
-        else if (isPrimitive2(bval)) a[key] = makeChange(wrapper(bval))
+        if (bval === undefined) a[key] = wrapper()
+        else if (isPrimitive2(bval)) a[key] = wrapper(bval)
         else {
           const prev = _cache.find(function (v) { return v[0] === bval })
           if (prev == null) {
@@ -174,7 +174,7 @@ function wrapData (wrapper) {
     function deepIt (a, b, callback, path) {
       _cache = isArray(_cache) ? _cache : []
       path = isArray(path) ? path : []
-      if (isPrimitive2(b)) return bindMethods(makeChange(wrapper(a)), path)
+      if (isPrimitive2(b)) return bindMethods(wrapper(a), path)
       for (let key in b) {
         if (!hasOwnProperty.call(b, key)) continue
         // return false stop the iteration
@@ -260,7 +260,7 @@ function wrapData (wrapper) {
           ;[t, p] = path[i]
           ;[nextT] = path[i + 1]
           if (!isWrapper(n[p])) {
-            n[p] = bindMethods(makeChange(wrapper(nextT === 'array' ? [] : {})), _path.slice(0, i + 1))
+            n[p] = bindMethods(wrapper(nextT === 'array' ? [] : {}), _path.slice(0, i + 1))
           }
           n = n[p]()
         }
@@ -280,7 +280,7 @@ function wrapData (wrapper) {
         }
       }
       root.skip = false
-      root.change.callback(value, action)
+      root.change.emit(value, action)
 
       return value
     }
@@ -298,7 +298,7 @@ function wrapData (wrapper) {
       if (!(p in parent)) return
       let deleteVal = parent[p]
       delete parent[p]
-      root.change.callback(deleteVal, 'delete')
+      root.change.emit(deleteVal, 'delete')
       return isWrapper(deleteVal) ? deleteVal.unwrap() : deleteVal
     }
 

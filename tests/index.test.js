@@ -367,6 +367,32 @@ it('model slice', () => {
   bc.change.end(true)
   bc(4)
   it(spy.callCount).equals(4)
+  it(d.get('a').change).equals(undefined)
+  it(isStream(d.get('b').change)).equals(true)
+})
+
+it('multiple slice', () => {
+  var spy = it.spy()
+  var w = wrapData(mithirlStream)
+  var d = w({
+    a: 1, b: { c: 2 }
+  })
+  var x = d.slice('b')
+  var s1 = x.change.map(spy)
+  var y = d.slice('b')
+  var s2 = y.change.map(spy)
+  it(x.change).equals(y.change)
+  d.set('b.c', 10)
+  // all 2 change stream emit
+  it(spy.callCount).equals(2)
+  // stop 1 not effect 2
+  s1.end(true)
+  d.set('b.c', 11)
+  it(spy.callCount).equals(3)
+  s2.end(true)
+  d.set('b.c', 12)
+  it(spy.callCount).equals(3)
+  it(typeof d.change.emit).equals('function')
 })
 
 if (require.main === module) it.run()
