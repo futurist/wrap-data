@@ -191,7 +191,7 @@ z(10)
 #### - wrapped_data.slice(path: string|string[], filter?: ({value, type, path}):boolean, wrapper = root)
 > get nested wrapped data from path, and attach a `change` stream to it that filtered from `(wrapper||root).change` stream, the default filter is to test if the `root.path` starts with path.
 
-*return: `wrapped_data.change` stream*
+*return: `wrapped_data`, which have a `.change` stream*
 
 The `wrapped_data.change` stream's value has `path` property to reflect the sub path of the sliced data.
 
