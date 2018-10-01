@@ -220,10 +220,16 @@ function wrapData (wrapper) {
     }
 
     // ensure path exists
-    function ensure (path, defaultValue, descriptor) {
+    function ensure (invalid, path, defaultValue, descriptor) {
+      if (!isFunction(invalid)) {
+        descriptor = defaultValue
+        defaultValue = path
+        path = invalid
+        invalid = () => false
+      }
       let obj = this
       let val = obj.get(path)
-      if (val == null) {
+      if (val == null || invalid(val)) {
         val = obj.set(path, defaultValue, descriptor)
       }
       return val

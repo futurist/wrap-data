@@ -247,8 +247,10 @@ var z = root.getset('x.a', val=>val+1)
 z()  // 11
 ```
 
-#### - wrapped_data.ensure(path: string|string[], value?: any, descriptor?: object)
-> like `set`, but only `set` when the path **not exists**, otherwise perform a `get` operation.
+#### - wrapped_data.ensure(invalid?: (val:wrapped):boolean, path: string|string[], value?: any, descriptor?: object)
+> like `set`, but only `set` when the path **not exists** or `invalid` test true for the path, otherwise perform a `get` operation.
+
+The `invalid` test more like a **set then get** when specified.
 
 *return: wrapped_data at `path`*
 
@@ -260,6 +262,9 @@ z()  // 11
 var z = root.ensure('x.b', 5)
 // x.b not exists, so perform a `set`
 z()  // 5
+
+// ensure `a.b` always >= 10
+root.ensure(val=>val()<10, 'x.b', 10).unwrap() //10
 ```
 
 #### - wrapped_data.unset(path: string|string[])

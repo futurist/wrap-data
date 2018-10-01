@@ -290,6 +290,19 @@ it('circle object test', () => {
   it(json).deepEquals({ a: { b: { d: 1 }, y: [ 3, 4, 5 ] } })
 })
 
+it('ensure', () => {
+  var w = wrapData(mithirlStream)
+  var d = w({
+    a: 1, b: { c: 2 }
+  })
+  var a = d.ensure('a', 10)
+  it(a.unwrap()).equals(1)
+  it(d.ensure('x', 10)()).equals(10)
+  it(d.ensure(val => val() < 10, 'a', 10)()).equals(10)
+  it(d.ensure(val => val() < 10, 'a', 100)()).equals(10)
+  it(d.ensure(val => val() < 5, 'a', 10)()).equals(10)
+})
+
 it('getset', () => {
   var spy = it.spy()
   var w = wrapData(mithirlStream)
