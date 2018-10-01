@@ -8,6 +8,7 @@ const arrayKeyRegEx = /^\[(\w+)\]$/
 // https://github.com/sindresorhus/is-plain-obj
 function isPOJO (x) {
   var prototype
+  /* eslint-disable-next-line no-return-assign */
   return toString.call(x) === '[object Object]' && (prototype = getPrototypeOf(x), prototype === null || prototype === getPrototypeOf({}))
 }
 
@@ -44,6 +45,7 @@ function isPrimitive2 (val) {
 const ignoreFirstCall = fn => {
   let calledOnce = false
   return function (arg) {
+    /* eslint-disable-next-line no-return-assign */
     return calledOnce ? fn.call(this, arg) : calledOnce = true
   }
 }
@@ -60,7 +62,6 @@ function wrapData (wrapper) {
       if (!isWrapper(part)) return part
       const { change } = part
       const target = wrapper || root
-      const { path: rootPath } = target
       const subPath = getPath(path).map(v => v[1])
       if (!isFunction(filter)) {
         filter = (value) => value.path.join().indexOf(subPath.join()) === 0
@@ -147,6 +148,7 @@ function wrapData (wrapper) {
             a[key] = createWrap(bval, _path, _cache)
           } else {
             prev.push(() => {
+              /* eslint-disable-next-line no-unused-vars */
               const [_, x, k] = prev
               a[key] = k == null ? x : x[k]
               bindMethods(a[key], k == null ? [] : _path)
@@ -247,6 +249,7 @@ function wrapData (wrapper) {
       if (!isWrapper(obj)) return obj
 
       let value, action
+      /* eslint-disable-next-line no-unused-vars */
       let i; let len; let t; let nextT; let p; let n = obj()
       root.skip = true
 
@@ -294,6 +297,7 @@ function wrapData (wrapper) {
       let val = obj.get(path.slice(0, -1))
       if (val == null) return
       let parent = val()
+      /* eslint-disable-next-line no-unused-vars */
       let [t, p] = path[len - 1]
       if (!(p in parent)) return
       let deleteVal = parent[p]
@@ -330,6 +334,7 @@ function _checkCacheAndUnwrap (config, _cache, val, result, key) {
   const prev = _cache.find(v => v[0] === val)
   if (prev != null) {
     !config.json && prev.push(() => {
+      /* eslint-disable-next-line no-unused-vars */
       const [_, r, k] = prev
       result[key] = k == null ? r : r[k]
     })
