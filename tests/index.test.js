@@ -6,6 +6,8 @@ const wrapData = require('../src')
 const { keys } = Object
 function isStream (s) { return typeof s.map === 'function' }
 
+/* eslint no-redeclare: 0 */
+
 it('mithril stream', () => {
   var w = wrapData(mithirlStream)
   var d = w({ a: 1, b: { c: 2 } })

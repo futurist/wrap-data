@@ -6,7 +6,8 @@
   "module": "dist/index.es.js",
   "browser": "dist/index.umd.js",
   "scripts": {
-    "test": "ospec",
+    "lint": "eslint src tests",
+    "test": "npm run lint && ospec",
     "build": "rollup -c",
     "preversion": "npm run test",
     "version": "npm run build",
