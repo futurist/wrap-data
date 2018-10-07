@@ -40,8 +40,8 @@ interface wrappedData extends Stream<any> {
     get(path: string | string[]): wrappedData | any;
     set(value: any): wrappedData;
     set(path: string | string[], value: any, descriptor?: object): wrappedData;
-    getset(valueFn: (prevVal:any)=>any): wrappedData;
-    getset(path: string | string[], valueFn: (prevVal:any)=>any, descriptor?: object): wrappedData;
+    getset(valueFn: (prevVal: wrappedData | any)=>any): wrappedData;
+    getset(path: string | string[], valueFn: (prevVal: wrappedData | any)=>any, descriptor?: object): wrappedData;
     ensure(path: string | string[], value: any, descriptor?: object): wrappedData;
     unset(path: string | string[]): any;
     unwrap(config?: unwrapConfig): any;

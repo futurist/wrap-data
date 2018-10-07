@@ -1,6 +1,6 @@
 const it = require('ospec')
 const flyd = require('flyd')
-const mithirlStream = require('mithril-stream')
+const mithirlStream = flyd.stream // require('mithril-stream')
 const wrapData = require('../src')
 
 const { keys } = Object
@@ -310,7 +310,9 @@ it('getset', () => {
     a: 1, b: { c: 2 }
   })
   d.change.map(spy)
-  var r = d.getset('b.c', v => v + 1)
+  var r = d.getset('b.c', v => {
+    return v() + 1
+  })
   it(spy.callCount).equals(1)
   it(r.unwrap()).equals(3)
 
@@ -323,7 +325,7 @@ it('getset', () => {
   it(r.unwrap()).deepEquals({ y: 3 })
 
   var x = d.get('b.c')
-  var r = x.getset(v => v + 1)
+  var r = x.getset(v => v() + 1)
   it(r.unwrap()).equals(4)
 })
 

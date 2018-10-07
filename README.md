@@ -237,13 +237,13 @@ root.unwrap()  // {x: {y: {z: 1}}, a: 10, arr:[10]}  // `arr` is array!
 
 ```
 
-#### - wrapped_data.getset(path?: string|string[], function(prevValue, empty?: boolean)->newValue, descriptor: object)
+#### - wrapped_data.getset(path?: string|string[], function(prevValue:wrappedData|any, empty?: boolean)->newValue, descriptor: object)
 > like `set`, but value is from a function, it let you set `value` based on previous value, the `descriptor` only applied when `empty` is `true`.
 
 *return: wrapped_data for `newValue`, at `path`*
 
 ```js
-var z = root.getset('x.a', val=>val+1)
+var z = root.getset('x.a', val=>val()+1)
 z()  // 11
 ```
 

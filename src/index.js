@@ -260,7 +260,7 @@ function wrapData (wrapper) {
       root.skip = true
 
       if (!path.length) {
-        obj(createWrap(func(obj.unwrap()), obj.path.slice())())
+        obj(createWrap(func(obj), obj.path.slice())())
         value = obj
         action = 'change'
       } else {
@@ -275,7 +275,7 @@ function wrapData (wrapper) {
         }
         ;[t, p] = path[i]
         if (isWrapper(n[p])) {
-          n[p](createWrap(func(n[p].unwrap()), obj.path.concat(_path))())
+          n[p](createWrap(func(n[p]), obj.path.concat(_path))())
           value = n[p]
           action = 'change'
         } else {
