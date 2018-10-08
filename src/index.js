@@ -127,11 +127,13 @@ function wrapData (wrapper) {
       if (isRoot) {
         _cache = [[source, packer, null]]
         root = makeChange(packer)
-        root.skip = true
       }
+      let skip = root.skip
+      root.skip = true
 
       if (isPrimitive2(source)) {
         packer = bindMethods(wrapper(source), prevPath)
+        root.skip = skip
         return packer
       }
 
@@ -168,8 +170,8 @@ function wrapData (wrapper) {
             v[3]()
           }
         })
-        root.skip = false
       }
+      root.skip = skip
       return ret
     }
 
@@ -257,7 +259,6 @@ function wrapData (wrapper) {
       let value, action
       /* eslint-disable-next-line no-unused-vars */
       let i; let len; let t; let nextT; let p; let n = obj()
-      root.skip = true
 
       if (!path.length) {
         obj(createWrap(func(obj), obj.path.slice())())
@@ -266,14 +267,14 @@ function wrapData (wrapper) {
       } else {
         const _path = path.map(v => v[1])
         for (i = 0, len = path.length - 1; i < len; i++) {
-          ;[t, p] = path[i]
+          [t, p] = path[i]
           ;[nextT] = path[i + 1]
           if (!isWrapper(n[p])) {
             n[p] = bindMethods(wrapper(nextT === 'array' ? [] : {}), _path.slice(0, i + 1))
           }
           n = n[p]()
         }
-        ;[t, p] = path[i]
+        [t, p] = path[i]
         if (isWrapper(n[p])) {
           n[p](createWrap(func(n[p]), obj.path.concat(_path))())
           value = n[p]
@@ -281,15 +282,18 @@ function wrapData (wrapper) {
         } else {
           value = createWrap(func(n[p], true), obj.path.concat(_path))
           if (isPrimitive(descriptor)) {
+            // Maybe Throw:
+            // Cannot create property 'z' on number '10'
             n[p] = value
           } else {
+            // Maybe Throw:
+            // Object.defineProperty called on non-object
             Object.defineProperty(n, p, assign({ value }, descriptor))
           }
           action = 'add'
+          root.change.emit(value, action)
         }
       }
-      root.skip = false
-      root.change.emit(value, action)
 
       return value
     }

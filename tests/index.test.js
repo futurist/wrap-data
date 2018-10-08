@@ -94,12 +94,12 @@ it('array test', () => {
   it(b().length).equals(0)
 
   var val = x.set('c.[0].xx', 10)
-  it(spy.callCount).equals(6)
+  it(spy.callCount).equals(8)
 
   var val = x.ensure('y.[0]', 10)
   it(val()).equals(10)
   it(val.path.join()).equals('y,0')
-  it(spy.callCount).equals(7)
+  it(spy.callCount).equals(10)
 
   it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ { xx: 10 } ], y: [10] })
 
@@ -108,7 +108,7 @@ it('array test', () => {
   var _c = c.unwrap()
   _c.unshift({ yy: 2 })
   c.set(_c)
-  it(spy.callCount).equals(8)
+  it(spy.callCount).equals(11)
   it(x.unwrap()).deepEquals({ a: { b: [] }, c: [ { yy: 2 }, { xx: 10 } ], y: [10] })
 })
 
@@ -117,6 +117,15 @@ it('single unwrap', () => {
   var x = wrapData(mithirlStream)({ a: { b: mithirlStream(10) } })
   x.change.map(spy)
   it(x().a.unwrap()).deepEquals({ b: 10 })
+})
+
+it('set test', () => {
+  var spy = it.spy()
+  var d = wrapData(mithirlStream)({})
+  d.change.map(spy)
+  it(spy.callCount).equals(0)
+  d.ensure('x.y.z', 10)
+  it(spy.callCount).equals(3)
 })
 
 it('object test', () => {
@@ -171,25 +180,25 @@ it('object test', () => {
   it(spy.callCount).equals(0)
 
   d.set('a.x.y', 34)
-  it(spy.callCount).equals(1)
+  it(spy.callCount).equals(2)
   it(spy.args[0].value()).deepEquals(34)
   it(spy.args[0].value.path.join()).deepEquals('a,x,y')
   it(spy.args[0].type).equals('add') // 1: ADD
 
   d.set('a.x.f', mithirlStream(mithirlStream(35)))
-  it(spy.callCount).equals(2)
+  it(spy.callCount).equals(3)
 
   it(d.get('a.x.y')()).equals(34)
   it(d.get('a.x.f')()()()).equals(35)
 
   var ss = d.ensure('a.x.y', 234)
-  it(spy.callCount).equals(2)
+  it(spy.callCount).equals(3)
   // ensure not change for exits one
   it(ss.unwrap()).equals(34)
 
   // but set can
   d.set('a.x.y', 3)
-  it(spy.callCount).equals(3)
+  it(spy.callCount).equals(4)
   it(spy.args[0].type).equals('change') // 0: CHANGE
   it(ss.unwrap()).equals(3)
 
@@ -201,42 +210,42 @@ it('object test', () => {
   }
   it(err instanceof Error).equals(true)
   // failed, but still change
-  it(spy.callCount).equals(3)
+  it(spy.callCount).equals(4)
 
   // success ensured set
   var xy = d.ensure('a.x.z', 234)
-  it(spy.callCount).equals(4)
+  it(spy.callCount).equals(5)
   it(xy()).equals(234)
 
   d.set('a.x.y', 199)
-  it(spy.callCount).equals(5)
+  it(spy.callCount).equals(6)
   it(d.get('a.x').get('y').unwrap()).equals(199)
 
   d.unset('a.x.y')
-  it(spy.callCount).equals(6)
+  it(spy.callCount).equals(7)
   it(spy.args[0].value.path.join()).equals('a,x,y')
   it(spy.args[0].type).equals('delete')
 
   it(d.get('a.x.y')).equals(undefined)
 
   d.set('a.x.y', { xx: 2 })
-  it(spy.callCount).equals(7)
+  it(spy.callCount).equals(8)
   it(d.get('a.x.y.xx').path.join()).equals('a,x,y,xx')
   it(d.get('a.x.y.xx')()).equals(2)
   it(d().a().x().y().xx()).equals(2)
 
   d.set('a.y.4', { yy: { zz: 234 } })
-  it(spy.callCount).equals(8)
+  it(spy.callCount).equals(9)
   it(d.get('a.y')().length).equals(5)
   it(d.get('a.y.4.yy').path.join()).equals('a,y,4,yy')
   it(d.get('a.y.4.yy.zz').path.join()).equals('a,y,4,yy,zz')
   it(d.get('a.y.4.yy.zz')()).equals(234)
 
   d.unset('a.y.3')
-  it(spy.callCount).equals(9)
+  it(spy.callCount).equals(10)
 
   d.get('a.i').set(10)
-  it(spy.callCount).equals(10)
+  it(spy.callCount).equals(11)
   it(spy.args[0].type).equals('change')
   it(d().a().i()).equals(10)
   it(d().a().i.path.join()).equals('a,i')
@@ -410,6 +419,24 @@ it('multiple slice', () => {
   d.set('b.c', 12)
   it(spy.callCount).equals(3)
   it(typeof d.change.emit).equals('function')
+})
+
+it('nested getset', () => {
+  var spy = it.spy()
+  var d = wrapData(mithirlStream)({
+    air: {
+      value: 23, unit: 'F'
+    }
+  })
+  var air = d.slice('air')
+  air.change.map(spy)
+  air.getset('value', v => v() + 1)
+  it(spy.callCount).equals(1)
+  air.getset('unit', v => {
+    air.getset('value', v => v() * 2)
+    return 'C'
+  })
+  it(spy.callCount).equals(3)
 })
 
 if (require.main === module) it.run()
