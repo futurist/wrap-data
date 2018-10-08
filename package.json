@@ -4,7 +4,7 @@
   "description": "wrap-data",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
-  "browser": "dist/index.umd.js",
+  "unpkg": "dist/index.umd.js",
   "scripts": {
     "lint": "eslint src tests",
     "test": "npm run lint && ospec",
