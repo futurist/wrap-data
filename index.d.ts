@@ -43,6 +43,7 @@ interface wrappedData extends Stream<any> {
     getset(valueFn: (prevVal: wrappedData | any)=>any): wrappedData;
     getset(path: string | string[], valueFn: (prevVal: wrappedData | any)=>any, descriptor?: object): wrappedData;
     ensure(path: string | string[], value: any, descriptor?: object): wrappedData;
+    ensure(invalid: (prevVal: wrappedData)=>boolean, path: string | string[], value: any, descriptor?: object): wrappedData;
     unset(path: string | string[]): any;
     unwrap(config?: unwrapConfig): any;
     unwrap(path: string | string[], config?: unwrapConfig): any;
