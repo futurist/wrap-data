@@ -105,7 +105,7 @@ function wrapData (wrapper) {
       packer.root = root
       packer.path = path
       packer.map(v => root.change.emit(packer, type))
-      // type = 'change'
+      type = 'change'
       packer.get = get
       packer.slice = slice
       packer.got = got
@@ -270,7 +270,7 @@ function wrapData (wrapper) {
           [t, p] = path[i]
           ;[nextT] = path[i + 1]
           if (!isWrapper(n[p])) {
-            n[p] = bindMethods(wrapper(nextT === 'array' ? [] : {}), _path.slice(0, i + 1))
+            n[p] = bindMethods(wrapper(nextT === 'array' ? [] : {}), _path.slice(0, i + 1), 'add')
           }
           n = n[p]()
         }
@@ -391,3 +391,10 @@ function _unwrap (obj, config, _cache) {
 }
 
 module.exports = wrapData
+
+// const d=wrapData(require('flyd').stream)({});
+// d.change.map(({value, type, path})=>console.log(type, path, value()))
+// d.set('a.b.c', 1)
+// debugger
+// d.set('a', 1)
+// d.set('a', 2)

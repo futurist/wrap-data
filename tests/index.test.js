@@ -439,4 +439,24 @@ it('nested getset', () => {
   it(spy.callCount).equals(3)
 })
 
+it('add intermediate object when set', () => {
+  const results = [
+    ['add', ['a'], {}],
+    ['add', ['a', 'b'], {}],
+    ['add', ['a', 'b', 'c'], 10],
+    ['change', ['a'], 1],
+    ['change', ['a'], 2]
+  ]
+  var d = wrapData(mithirlStream)({})
+  d.change.map(({ type, path, value }) => {
+    const [_type, _path, _value] = results.shift()
+    it(type).deepEquals(_type)
+    it(path).deepEquals(_path)
+    it(value()).deepEquals(_value)
+  })
+  d.set('a.b.c', 10)
+  d.set('a', 1)
+  d.set('a', 2)
+})
+
 if (require.main === module) it.run()
