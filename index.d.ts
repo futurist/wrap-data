@@ -1,55 +1,55 @@
-interface Stream<T> {
+declare interface Stream<T> {
     (): T;
     (value: T): Stream<T>;
     map<V>(project: (value: T) => V): Stream<V>;
 }
 
-interface CreateStream {
+declare interface CreateStream {
     <T>(): Stream<T>;
     <T>(value: T): Stream<T>;
     (): Stream<void>;
 }
 
-interface wrapFactory {
-    (stream: CreateStream): dataFactory;
+declare interface WrapFactory {
+    (stream: CreateStream): DataFactory;
 }
 
-interface dataFactory {
-    (data: any): wrappedData;
+declare interface DataFactory {
+    (data: any): IWrappedData;
 }
 
-interface unwrapConfig {
+declare interface IUnwrapConfig {
     json: boolean;
 }
 
-interface IChangeStreamValue {
-    value: wrappedData,
+declare interface IChangeStreamValue {
+    value: IWrappedData,
     type: 'change'|'delete'|'add',
     path: string[]
 }
 
-interface wrappedData extends Stream<any> {
-    root: wrappedData;
+declare interface IWrappedData extends Stream<any> {
+    root: IWrappedData;
     path: string[];
     change: Stream<IChangeStreamValue>;
     slice(
         path: string | string[],
         filter?: (data: IChangeStreamValue) => boolean,
-        wrapper?: wrappedData
-    ): wrappedData | any;
-    get(path: string | string[]): wrappedData | any;
-    set(value: any): wrappedData;
-    set(path: string | string[], value: any, descriptor?: object): wrappedData;
-    getset(valueFn: (prevVal: wrappedData | any)=>any): wrappedData;
-    getset(path: string | string[], valueFn: (prevVal: wrappedData | any)=>any, descriptor?: object): wrappedData;
-    ensure(path: string | string[], value: any, descriptor?: object): wrappedData;
-    ensure(invalid: (prevVal: wrappedData)=>boolean, path: string | string[], value: any, descriptor?: object): wrappedData;
+        wrapper?: IWrappedData
+    ): IWrappedData | any;
+    get(path: string | string[]): IWrappedData | any;
+    set(value: any): IWrappedData;
+    set(path: string | string[], value: any, descriptor?: object): IWrappedData;
+    getset(valueFn: (prevVal: IWrappedData | any)=>any): IWrappedData;
+    getset(path: string | string[], valueFn: (prevVal: IWrappedData | any)=>any, descriptor?: object): IWrappedData;
+    ensure(path: string | string[], value: any, descriptor?: object): IWrappedData;
+    ensure(invalid: (prevVal: IWrappedData)=>boolean, path: string | string[], value: any, descriptor?: object): IWrappedData;
     unset(path: string | string[]): any;
-    unwrap(config?: unwrapConfig): any;
-    unwrap(path: string | string[], config?: unwrapConfig): any;
+    unwrap(config?: IUnwrapConfig): any;
+    unwrap(path: string | string[], config?: IUnwrapConfig): any;
 }
 
-declare const wrapData: wrapFactory;
+declare const wrapData: WrapFactory;
 
 declare module 'wrap-data' {
     export = wrapData;
