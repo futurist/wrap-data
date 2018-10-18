@@ -4,12 +4,22 @@ const { assign, keys, getPrototypeOf } = Object
 const { toString, hasOwnProperty } = Object.prototype
 const { isArray } = Array
 const arrayKeyRegEx = /^\[(\w+)\]$/
+const MUTATION_TYPE = {
+  CREATE: 'create',
+  ADD: 'add',
+  CHANGE: 'change',
+  DELETE: 'delete'
+}
 
 // https://github.com/sindresorhus/is-plain-obj
 function isPOJO (x) {
   var prototype
   /* eslint-disable-next-line no-return-assign */
-  return toString.call(x) === '[object Object]' && (prototype = getPrototypeOf(x), prototype === null || prototype === getPrototypeOf({}))
+  return toString.call(x) === '[object Object]' &&
+    (
+      prototype = getPrototypeOf(x),
+      prototype === null || prototype === getPrototypeOf({})
+    )
 }
 
 function isFunction (obj) {
@@ -17,7 +27,10 @@ function isFunction (obj) {
 }
 
 function isPrimitive (val) {
-  return val == null || (typeof val !== 'function' && typeof val !== 'object')
+  return val == null ||
+    (
+      typeof val !== 'function' && typeof val !== 'object'
+    )
 }
 
 function getPath (path) {
@@ -36,7 +49,10 @@ function isWrapper (obj) {
 }
 
 function isWrappedData (obj) {
-  return isWrapper(obj) && 'root' in obj && 'path' in obj && isFunction(obj.get)
+  return isWrapper(obj) &&
+    'root' in obj &&
+    'path' in obj &&
+    isFunction(obj.get)
 }
 
 function isPrimitive2 (val) {
@@ -99,13 +115,13 @@ function wrapData (wrapper) {
       return packer
     }
 
-    function bindMethods (packer, path, type = 'change') {
+    function bindMethods (packer, path, type = MUTATION_TYPE.CHANGE) {
       if ('path' in packer && 'root' in packer) return packer
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packer.root = root
       packer.path = path
       packer.map(v => root.change.emit(packer, type))
-      type = 'change'
+      type = MUTATION_TYPE.CHANGE
       packer.get = get
       packer.slice = slice
       packer.got = got
@@ -127,6 +143,7 @@ function wrapData (wrapper) {
       if (isRoot) {
         _cache = [[source, packer, null]]
         root = makeChange(packer)
+        root.MUTATION_TYPE = MUTATION_TYPE
       }
       let skip = root.skip
       root.skip = true
@@ -218,7 +235,14 @@ function wrapData (wrapper) {
 
     function got (path) {
       const stream = this.get(path)
-      return assign({ stream }, stream != null && { value: isWrapper(stream) ? stream.unwrap() : stream })
+      return assign(
+        { stream },
+        stream != null && {
+          value: isWrapper(stream)
+            ? stream.unwrap()
+            : stream
+        }
+      )
     }
 
     // ensure path exists
@@ -263,14 +287,18 @@ function wrapData (wrapper) {
       if (!path.length) {
         obj(createWrap(func(obj), obj.path.slice())())
         value = obj
-        action = 'change'
+        action = MUTATION_TYPE.CHANGE
       } else {
         const _path = path.map(v => v[1])
         for (i = 0, len = path.length - 1; i < len; i++) {
           [t, p] = path[i]
           ;[nextT] = path[i + 1]
           if (!isWrapper(n[p])) {
-            n[p] = bindMethods(wrapper(nextT === 'array' ? [] : {}), _path.slice(0, i + 1), 'add')
+            n[p] = bindMethods(
+              wrapper(nextT === 'array' ? [] : {}),
+              _path.slice(0, i + 1),
+              MUTATION_TYPE.CREATE
+            )
           }
           n = n[p]()
         }
@@ -278,7 +306,7 @@ function wrapData (wrapper) {
         if (isWrapper(n[p])) {
           n[p](createWrap(func(n[p]), obj.path.concat(_path))())
           value = n[p]
-          action = 'change'
+          action = MUTATION_TYPE.CHANGE
         } else {
           value = createWrap(func(n[p], true), obj.path.concat(_path))
           if (isPrimitive(descriptor)) {
@@ -290,7 +318,7 @@ function wrapData (wrapper) {
             // Object.defineProperty called on non-object
             Object.defineProperty(n, p, assign({ value }, descriptor))
           }
-          action = 'add'
+          action = MUTATION_TYPE.ADD
           root.change.emit(value, action)
         }
       }
@@ -312,8 +340,10 @@ function wrapData (wrapper) {
       if (!(p in parent)) return
       let deleteVal = parent[p]
       delete parent[p]
-      root.change.emit(deleteVal, 'delete')
-      return isWrapper(deleteVal) ? deleteVal.unwrap() : deleteVal
+      root.change.emit(deleteVal, MUTATION_TYPE.DELETE)
+      return isWrapper(deleteVal)
+        ? deleteVal.unwrap()
+        : deleteVal
     }
 
     function push (value) {
@@ -333,7 +363,11 @@ function wrapData (wrapper) {
         config = path
         path = null
       }
-      return _unwrap(path != null ? this.get(path) : this, config)
+      return _unwrap(
+        path != null
+          ? this.get(path)
+          : this, config
+      )
     }
 
     return root
@@ -391,10 +425,3 @@ function _unwrap (obj, config, _cache) {
 }
 
 module.exports = wrapData
-
-// const d=wrapData(require('flyd').stream)({});
-// d.change.map(({value, type, path})=>console.log(type, path, value()))
-// d.set('a.b.c', 1)
-// debugger
-// d.set('a', 1)
-// d.set('a', 2)

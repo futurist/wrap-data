@@ -441,8 +441,8 @@ it('nested getset', () => {
 
 it('add intermediate object when set', () => {
   const results = [
-    ['add', ['a'], {}],
-    ['add', ['a', 'b'], {}],
+    ['create', ['a'], {}],
+    ['create', ['a', 'b'], {}],
     ['add', ['a', 'b', 'c'], 10],
     ['change', ['a'], 1],
     ['change', ['a'], 2]
@@ -459,4 +459,6 @@ it('add intermediate object when set', () => {
   d.set('a', 2)
 })
 
-if (require.main === module) it.run()
+if (require.main === module) {
+  it.run()
+}
