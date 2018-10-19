@@ -459,6 +459,34 @@ it('add intermediate object when set', () => {
   d.set('a', 2)
 })
 
+it('setMany and setMany', () => {
+  var d = wrapData(mithirlStream)({})
+  d.setMany({
+    'a.b': 1,
+    'x': 2
+  })
+  it(d.unwrap()).deepEquals({
+    a: { b: 1 },
+    x: 2
+  })
+  it(d.getMany(['a.b', 'x'], true)).deepEquals([
+    1,
+    2
+  ])
+
+  // test descriptors
+  d.setMany({
+    y: 3
+  }, {
+    y: {}
+  })
+  it(d.unwrap()).deepEquals({
+    a: { b: 1 },
+    x: 2
+  })
+  it(d().y()).deepEquals(3)
+})
+
 if (require.main === module) {
   it.run()
 }

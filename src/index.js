@@ -126,6 +126,8 @@ function wrapData (wrapper) {
       packer.slice = slice
       packer.got = got
       packer.set = set
+      packer.getMany = getMany
+      packer.setMany = setMany
       packer.getset = getset
       packer.ensure = ensure
       packer.unset = unset
@@ -218,11 +220,17 @@ function wrapData (wrapper) {
       return a
     }
 
-    function get (path, cb, bubble) {
+    function getMany (pathArray, unwrap) {
+      return pathArray.map(path => {
+        const val = this.get(path)
+        return unwrap ? val.unwrap() : val
+      })
+    }
+
+    function get (path, cb) {
       let obj = this
       let n = obj
       path = getPath(path)
-      if (bubble) path = path.reverse()
       for (let i = 0, len = path.length; i < len; i++) {
         if (!isWrapper(n)) {
           return
@@ -261,13 +269,20 @@ function wrapData (wrapper) {
       return val
     }
 
+    function setMany (kvMap, descriptors = {}) {
+      for (let key in kvMap) {
+        if (!hasOwnProperty.call(kvMap, key)) continue
+        this.set(key, kvMap[key], descriptors[key])
+      }
+    }
+
     function set (path, value, descriptor) {
       if (arguments.length <= 1) {
         value = path
         path = []
       }
       const func = () => value
-      return getset.call(this, path, func, descriptor)
+      return this.getset(path, func, descriptor)
     }
 
     function getset (path, func, descriptor) {
