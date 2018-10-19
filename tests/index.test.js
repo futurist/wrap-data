@@ -459,7 +459,7 @@ it('add intermediate object when set', () => {
   d.set('a', 2)
 })
 
-it('setMany and setMany', () => {
+it('setMany', () => {
   var d = wrapData(mithirlStream)({})
   d.setMany({
     'a.b': 1,
@@ -469,10 +469,6 @@ it('setMany and setMany', () => {
     a: { b: 1 },
     x: 2
   })
-  it(d.getMany(['a.b', 'x'], true)).deepEquals([
-    1,
-    2
-  ])
 
   // test descriptors
   d.setMany({
@@ -485,6 +481,32 @@ it('setMany and setMany', () => {
     x: 2
   })
   it(d().y()).deepEquals(3)
+})
+
+it('getMany', () => {
+  var d = wrapData(mithirlStream)({
+    a: { b: 1 },
+    x: 2
+  })
+
+  // array
+  it(d.getMany(['a.b', 'x', 'y'])).deepEquals([
+    1,
+    2,
+    undefined
+  ])
+
+  // plain string
+  it(d.getMany('a.b', val => val.unwrap() + 10)).deepEquals(11)
+
+  // POJO
+  it(d.getMany({
+    'x': 1,
+    'y': null
+  })).deepEquals({
+    x: 2,
+    y: undefined
+  })
 })
 
 if (require.main === module) {

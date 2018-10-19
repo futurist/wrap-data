@@ -220,11 +220,26 @@ function wrapData (wrapper) {
       return a
     }
 
-    function getMany (pathArray, unwrap) {
-      return pathArray.map(path => {
+    function getMany (
+      pathMap,
+      mapFunc = val => val != null ? val.unwrap() : val
+    ) {
+      const getValue = path => {
         const val = this.get(path)
-        return unwrap ? val.unwrap() : val
-      })
+        return mapFunc(val)
+      }
+      if (isPOJO(pathMap)) {
+        const obj = {}
+        for (let key in pathMap) {
+          if (!hasOwnProperty.call(pathMap, key)) continue
+          obj[key] = getValue(key)
+        }
+        return obj
+      } else if (isArray(pathMap)) {
+        return pathMap.map(getValue)
+      } else {
+        return getValue(pathMap)
+      }
     }
 
     function get (path, cb) {
