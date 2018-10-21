@@ -124,7 +124,6 @@ function wrapData (wrapper) {
       type = MUTATION_TYPE.CHANGE
       packer.get = get
       packer.slice = slice
-      packer.got = got
       packer.set = set
       packer.getMany = getMany
       packer.setMany = setMany
@@ -225,8 +224,7 @@ function wrapData (wrapper) {
       mapFunc = val => val != null ? val.unwrap() : val
     ) {
       const getValue = path => {
-        const val = this.get(path)
-        return mapFunc(val)
+        return this.get(path, mapFunc)
       }
       if (isPOJO(pathMap)) {
         const obj = {}
@@ -242,30 +240,17 @@ function wrapData (wrapper) {
       }
     }
 
-    function get (path, cb) {
+    function get (path, mapFunc) {
       let obj = this
       let n = obj
       path = getPath(path)
       for (let i = 0, len = path.length; i < len; i++) {
         if (!isWrapper(n)) {
-          return
+          break
         }
-        if (cb && cb(n) === false) return
         n = n()[path[i][1]]
       }
-      return n
-    }
-
-    function got (path) {
-      const stream = this.get(path)
-      return assign(
-        { stream },
-        stream != null && {
-          value: isWrapper(stream)
-            ? stream.unwrap()
-            : stream
-        }
-      )
+      return isFunction(mapFunc) ? mapFunc(n) : n
     }
 
     // ensure path exists

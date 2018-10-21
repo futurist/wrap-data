@@ -509,6 +509,15 @@ it('getMany', () => {
   })
 })
 
+it('get with mapFunc', () => {
+  var d = wrapData(mithirlStream)({
+    a: { b: 1 },
+    x: 2
+  })
+  it(d.get('x', v => v.unwrap())).equals(2)
+  it(d.get('y', v => v == null ? 1 : 2)).equals(1)
+})
+
 if (require.main === module) {
   it.run()
 }
