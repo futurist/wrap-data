@@ -66,6 +66,8 @@ const ignoreFirstCall = fn => {
   }
 }
 
+const defaultMapFunc = val => val != null ? val.unwrap() : val
+
 function wrapData (wrapper) {
   return source => {
     let root
@@ -221,7 +223,7 @@ function wrapData (wrapper) {
 
     function getMany (
       pathMap,
-      mapFunc = val => val != null ? val.unwrap() : val
+      mapFunc = defaultMapFunc
     ) {
       const getValue = path => {
         return this.get(path, mapFunc)
