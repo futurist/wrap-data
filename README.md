@@ -290,6 +290,31 @@ var z = root.unwrap()
 z // {x: {y: {z: 11}}, a: [10]},   x.c is hidden
 ```
 
+#### - wrapped_data.setMany(kvMap: object, descriptors?: object)
+> multiple set key and value from `kvMap`, and find descriptor from `descriptors` with the key.
+
+*return: void*
+
+```js
+root.unwrap() // {a:10, x:20, y:30}
+root.setMany({
+    x:1,
+    y:2
+})
+
+root.unwrap() // {a:10, x: 1, y:2}
+```
+
+#### - wrapped_data.getMany(pathMap: object|string[]|string, mapFunc?:(val: IWrappedData|undefined)=>any)
+> multiple get each path from `pathMap`(can be array/object/string), and map each value with `mapFunc` as result.
+
+*return: result data with same shape as pathMap*
+
+```js
+root.unwrap() // {a:10, x:20, y:30}
+root.getMany(['x', 'y'])  // [20, 30]
+```
+
 #### - wrapped_array.push(value: any)
 > push new `value` into wrapped data when it's array, all the inside will be wrapped.
 
