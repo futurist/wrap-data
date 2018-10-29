@@ -481,6 +481,11 @@ it('setMany', () => {
     x: 2
   })
   it(d().y()).deepEquals(3)
+  const r = d.setMany({
+    x: 10, y: 20
+  })
+  it(r.x.unwrap()).equals(10)
+  it(r.y.unwrap()).equals(20)
 })
 
 it('getMany', () => {

@@ -272,10 +272,12 @@ function wrapData (wrapper) {
     }
 
     function setMany (kvMap, descriptors = {}) {
+      const obj = isArray(kvMap) ? [] : {}
       for (let key in kvMap) {
         if (!hasOwnProperty.call(kvMap, key)) continue
-        this.set(key, kvMap[key], descriptors[key])
+        obj[key] = this.set(key, kvMap[key], descriptors[key])
       }
+      return obj
     }
 
     function set (path, value, descriptor) {

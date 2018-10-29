@@ -293,7 +293,7 @@ z // {x: {y: {z: 11}}, a: [10]},   x.c is hidden
 #### - wrapped_data.setMany(kvMap: object, descriptors?: object)
 > multiple set key and value from `kvMap`, and find descriptor from `descriptors` with the key.
 
-*return: void*
+*return: object with same key, and each value is result of set()*
 
 ```js
 root.unwrap() // {a:10, x:20, y:30}
@@ -301,7 +301,6 @@ root.setMany({
     x:1,
     y:2
 })
-
 root.unwrap() // {a:10, x: 1, y:2}
 ```
 

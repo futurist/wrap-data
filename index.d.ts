@@ -41,7 +41,7 @@ declare interface IWrappedData extends Stream<any> {
     set(value: any): IWrappedData;
     set(path: string | string[], value: any, descriptor?: object): IWrappedData;
     getMany(pathMap: object | string[] | string, mapFunc?: (val: IWrappedData | undefined) => any): object | any[] | any;
-    setMany(kvMap: object, descriptors?: object): void;
+    setMany(kvMap: object, descriptors?: object): object;
     getset(valueFn: (prevVal: IWrappedData | undefined) => any): IWrappedData;
     getset(path: string | string[], valueFn: (prevVal: IWrappedData | undefined) => any, descriptor?: object): IWrappedData;
     ensure(path: string | string[], value: any, descriptor?: object): IWrappedData;
