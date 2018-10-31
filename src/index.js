@@ -114,16 +114,15 @@ function wrapData (wrapper) {
         return oldMap.call(this, _fn)
       }
       _change.emit = (value, type, data) => {
-        if (!root.change.skip()) {
-          _change.count++
-          if (data == null) {
-            data = { path: value.path }
-          }
-          if (_change.hold()) {
-            changeStack.push(assign({ value, type }, data))
-          } else {
-            _change(assign({ value, type }, data))
-          }
+        if (root.change.skip() || _change.skip()) return
+        _change.count++
+        if (data == null) {
+          data = { path: value.path }
+        }
+        if (_change.hold()) {
+          changeStack.push(assign({ value, type }, data))
+        } else {
+          _change(assign({ value, type }, data))
         }
       }
       packer.change = _change

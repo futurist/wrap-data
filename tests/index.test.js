@@ -525,21 +525,23 @@ it('get with mapFunc', () => {
 
 it('hold change', () => {
   var spy = it.spy()
-  var d = wrapData(mithirlStream)({
+  var root = wrapData(mithirlStream)({
     a: { b: 1 },
     x: 2
   })
-  // d = d.slice('a')
+  var d = root.slice('a')
   d.change.map(spy)
   d.change.hold(true)
   d.set('x', 3)
   it(spy.callCount).equals(0)
+  d.change.skip(true)
   d.set('x', 4)
+  d.change.skip(false)
   it(spy.callCount).equals(0)
   d.set('y', 5)
   it(spy.callCount).equals(0)
   d.change.hold(false)
-  it(spy.callCount).equals(3)
+  it(spy.callCount).equals(2)
 })
 
 it('skip change', () => {
