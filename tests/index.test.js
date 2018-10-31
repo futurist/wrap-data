@@ -523,16 +523,42 @@ it('get with mapFunc', () => {
   it(d.get('y', v => v == null ? 1 : 2)).equals(1)
 })
 
-it('batch commit', () => {
+it('hold change', () => {
+  var spy = it.spy()
   var d = wrapData(mithirlStream)({
     a: { b: 1 },
     x: 2
   })
-  d.change.hold = true
+  // d = d.slice('a')
+  d.change.map(spy)
+  d.change.hold(true)
   d.set('x', 3)
+  it(spy.callCount).equals(0)
   d.set('x', 4)
+  it(spy.callCount).equals(0)
   d.set('y', 5)
-  d.change.hold = false
+  it(spy.callCount).equals(0)
+  d.change.hold(false)
+  it(spy.callCount).equals(3)
+})
+
+it('skip change', () => {
+  var spy = it.spy()
+  var d = wrapData(mithirlStream)({
+    a: { b: 1 },
+    x: 2
+  })
+  // d = d.slice('a')
+  d.change.map(spy)
+  d.change.skip(true)
+  d.set('x', 3)
+  it(spy.callCount).equals(0)
+  d.set('x', 4)
+  it(spy.callCount).equals(0)
+  d.set('y', 5)
+  it(spy.callCount).equals(0)
+  d.change.skip(false)
+  it(spy.callCount).equals(0)
 })
 
 // run if not from cli

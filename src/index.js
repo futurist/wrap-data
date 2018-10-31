@@ -98,10 +98,17 @@ function wrapData (wrapper) {
     function makeChange (packer) {
       if (!isWrapper(packer)) return packer
       const _change = wrapper()
-      let oldMap = _change.map
+      const oldMap = _change.map
+      let changeStack = []
       _change.count = 0
       _change.skip = wrapper()
       _change.hold = wrapper()
+      _change.hold.map(val => {
+        if (!val) {
+          changeStack.forEach(_change)
+          changeStack = []
+        }
+      })
       _change.map = function (fn) {
         const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
         return oldMap.call(this, _fn)
@@ -112,7 +119,11 @@ function wrapData (wrapper) {
           if (data == null) {
             data = { path: value.path }
           }
-          _change(assign({ value, type }, data))
+          if (_change.hold()) {
+            changeStack.push(assign({ value, type }, data))
+          } else {
+            _change(assign({ value, type }, data))
+          }
         }
       }
       packer.change = _change
