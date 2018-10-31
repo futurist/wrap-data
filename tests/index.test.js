@@ -523,6 +523,19 @@ it('get with mapFunc', () => {
   it(d.get('y', v => v == null ? 1 : 2)).equals(1)
 })
 
+it('batch commit', () => {
+  var d = wrapData(mithirlStream)({
+    a: { b: 1 },
+    x: 2
+  })
+  d.change.hold = true
+  d.set('x', 3)
+  d.set('x', 4)
+  d.set('y', 5)
+  d.change.hold = false
+})
+
+// run if not from cli
 if (require.main === module) {
   it.run()
 }

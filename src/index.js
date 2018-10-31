@@ -100,12 +100,14 @@ function wrapData (wrapper) {
       const _change = wrapper()
       let oldMap = _change.map
       _change.count = 0
+      _change.skip = wrapper()
+      _change.hold = wrapper()
       _change.map = function (fn) {
         const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
         return oldMap.call(this, _fn)
       }
       _change.emit = (value, type, data) => {
-        if (!root.skip) {
+        if (!root.change.skip()) {
           _change.count++
           if (data == null) {
             data = { path: value.path }
@@ -148,12 +150,12 @@ function wrapData (wrapper) {
         root = makeChange(packer)
         root.MUTATION_TYPE = MUTATION_TYPE
       }
-      let skip = root.skip
-      root.skip = true
+      let skip = root.change.skip()
+      root.change.skip(true)
 
       if (isPrimitive2(source)) {
         packer = bindMethods(wrapper(source), prevPath)
-        root.skip = skip
+        root.change.skip(skip)
         return packer
       }
 
@@ -191,7 +193,7 @@ function wrapData (wrapper) {
           }
         })
       }
-      root.skip = skip
+      root.change.skip(skip)
       return ret
     }
 
