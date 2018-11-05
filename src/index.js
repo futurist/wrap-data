@@ -95,8 +95,8 @@ function wrapData (wrapper, options = {}) {
       return part
     }
 
-    function makeChange (packer) {
-      if (!isWrapper(packer)) return packer
+    function makeChange (packed) {
+      if (!isWrapper(packed)) return packed
       const _change = wrapper()
       const oldMap = _change.map
       let changeStack = []
@@ -125,55 +125,55 @@ function wrapData (wrapper, options = {}) {
           _change(assign({ value, type }, data))
         }
       }
-      packer.change = _change
-      return packer
+      packed.change = _change
+      return packed
     }
 
-    function bindMethods (packer, path, type = MUTATION_TYPE.CHANGE) {
-      if ('path' in packer && 'root' in packer) return packer
+    function bindMethods (packed, path, type = MUTATION_TYPE.CHANGE) {
+      if ('path' in packed && 'root' in packed) return packed
       // type: 0->CHANGE, 1->ADD, 2->DELETE
-      packer.root = root
-      packer.path = path
-      packer.map(v => root.change.emit(packer, type))
+      packed.root = root
+      packed.path = path
+      packed.map(v => root.change.emit(packed, type))
       type = MUTATION_TYPE.CHANGE
-      packer.get = get
-      packer.slice = slice
-      packer.set = set
-      packer.getMany = getMany
-      packer.setMany = setMany
-      packer.getset = getset
-      packer.ensure = ensure
-      packer.unset = unset
-      packer.unwrap = unwrap
-      if (isArray(packer())) {
-        packer.push = push
-        packer.pop = pop
+      packed.get = get
+      packed.slice = slice
+      packed.set = set
+      packed.getMany = getMany
+      packed.setMany = setMany
+      packed.getset = getset
+      packed.ensure = ensure
+      packed.unset = unset
+      packed.unwrap = unwrap
+      if (isArray(packed())) {
+        packed.push = push
+        packed.pop = pop
       }
       if (isFunction(options.extend)) {
-        options.extend(packer)
+        options.extend(packed)
       }
-      return packer
+      return packed
     }
 
     function createWrap (source, prevPath = []) {
-      let packer = wrapper()
+      let packed = wrapper()
       const isRoot = _cache == null
       if (isRoot) {
-        _cache = [[source, packer, null]]
-        root = makeChange(packer)
+        _cache = [[source, packed, null]]
+        root = makeChange(packed)
         root.MUTATION_TYPE = MUTATION_TYPE
       }
       let skip = root.change.skip()
       root.change.skip(true)
 
       if (isPrimitive2(source)) {
-        packer = bindMethods(wrapper(source), prevPath)
+        packed = bindMethods(wrapper(source), prevPath)
         root.change.skip(skip)
-        return packer
+        return packed
       }
 
       const target = isArray(source) ? [] : isPOJO(source) ? {} : source
-      packer(deepIt(target, source, (a, b, key, path) => {
+      packed(deepIt(target, source, (a, b, key, path) => {
         const _path = path.concat(key)
         const bval = b[key]
         if (bval === undefined) a[key] = wrapper()
@@ -197,7 +197,7 @@ function wrapData (wrapper, options = {}) {
         }
       }, prevPath))
 
-      const ret = bindMethods(packer, prevPath)
+      const ret = bindMethods(packed, prevPath)
 
       if (isRoot) {
         _cache.forEach(v => {
