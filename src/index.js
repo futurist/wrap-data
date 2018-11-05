@@ -68,7 +68,7 @@ const ignoreFirstCall = fn => {
 
 const defaultMapFunc = val => val != null ? val.unwrap() : val
 
-function wrapData (wrapper) {
+function wrapData (wrapper, options = {}) {
   return source => {
     let root
     let _cache = null
@@ -148,6 +148,9 @@ function wrapData (wrapper) {
       if (isArray(packer())) {
         packer.push = push
         packer.pop = pop
+      }
+      if (isFunction(options.extend)) {
+        options.extend(packer)
       }
       return packer
     }
@@ -394,11 +397,14 @@ function wrapData (wrapper) {
         config = path
         path = null
       }
-      return _unwrap(
-        path != null
-          ? this.get(path)
-          : this, config
-      )
+      const obj = path != null
+        ? this.get(path)
+        : this
+      return _unwrap(obj, Object.assign(
+        {},
+        isFunction(options.unwrap) && options.unwrap(obj),
+        config
+      ))
     }
 
     return root
@@ -422,7 +428,9 @@ function _checkCacheAndUnwrap (config, _cache, val, result, key) {
 
 function _unwrap (obj, config, _cache) {
   let isRoot = _cache == null
-  if (isRoot) _cache = [[obj]]
+  if (isRoot) {
+    _cache = [[obj]]
+  }
 
   let result
   let source = obj
@@ -451,6 +459,7 @@ function _unwrap (obj, config, _cache) {
         v[3]()
       }
     })
+    if (isFunction(config.map)) result = config.map(result)
   }
   return result
 }

@@ -563,6 +563,86 @@ it('skip change', () => {
   it(spy.callCount).equals(0)
 })
 
+it('unwrap map', () => {
+  const c = {
+    displayName: 'c',
+    store: {
+      odpsData: []
+    },
+    actions: {
+      getOdps: {
+        async: true,
+        reducer: {
+          success: (store, action) => {
+            store.odpsData = action.data
+          }
+        }
+      }
+    }
+  }
+
+  const d = wrapData(
+    mithirlStream,
+    {
+      unwrap: packer => {
+        // console.log(obj.path)
+        const { path } = packer || {}
+        if (packer && /api/.test(path)) {
+          const res = path[1]
+          return {
+            map: (val) => {
+              return Promise.resolve(val)
+                .then(val => {
+                  val.x = 10
+                  c.actions[res].reducer.success(c.store, {
+                    data: [1234]
+                  })
+                  return val
+                })
+            }
+          }
+        }
+      }
+    }
+  )({
+    store: {
+      [c.displayName]: mithirlStream(c.store)
+    },
+    api: {
+      getOdps: {
+        url: 'http://www.baidu.com',
+        method: 'get'
+      },
+      postOdps: {
+        url: 'http://www.baidu.com',
+        method: 'post'
+      }
+    }
+  })
+  const result = d.unwrap('api.getOdps')
+  it(typeof result.then).equals('function')
+  result.then(val => {
+    it(val.method).equals('get')
+    it(val.x).equals(10)
+    it(c.store.odpsData).deepEquals([1234])
+  })
+})
+
+it('options.extend', () => {
+  const d = wrapData(
+    mithirlStream,
+    {
+      extend: obj => {
+        obj.add = function (n) {
+          this(this() + n)
+        }
+      }
+    }
+  )({ x: 1 })
+  d.get('x').add(2)
+  it(d.unwrap('x')).equals(3)
+})
+
 // run if not from cli
 if (require.main === module) {
   it.run()
