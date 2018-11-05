@@ -44,20 +44,6 @@ function getPathType (p) {
   return match != null ? ['array', match[1]] : ['', p]
 }
 
-function isWrapper (obj) {
-  return isFunction(obj) && isFunction(obj.map)
-}
-
-function isWrappedData (obj) {
-  return isWrapper(obj) &&
-    'root' in obj &&
-    'path' in obj &&
-    isFunction(obj.get)
-}
-
-function isPrimitive2 (val) {
-  return isPrimitive(val) || isWrapper(val)
-}
 const ignoreFirstCall = fn => {
   let calledOnce = false
   return function (arg) {
@@ -69,6 +55,76 @@ const ignoreFirstCall = fn => {
 const defaultMapFunc = val => val != null ? val.unwrap() : val
 
 function wrapData (wrapper, options = {}) {
+  options.getMany = options.getMany || {}
+
+  let isWrapper = options.isWrapper || ((obj) => {
+    return isFunction(obj) && isFunction(obj.map)
+  })
+
+  function isWrappedData (obj) {
+    return isWrapper(obj) &&
+    'root' in obj &&
+    'path' in obj &&
+    isFunction(obj.get)
+  }
+
+  function isPrimitive2 (val) {
+    return isPrimitive(val) || isWrapper(val)
+  }
+
+  function _checkCacheAndUnwrap (config, _cache, val, result, key) {
+    const prev = _cache.find(v => v[0] === val)
+    if (prev != null) {
+      !config.json && prev.push(() => {
+      /* eslint-disable-next-line no-unused-vars */
+        const [_, r, k] = prev
+        result[key] = k == null ? r : r[k]
+      })
+    } else {
+      _cache.push([val, result, key])
+      result[key] = _unwrap(val, config, _cache)
+    }
+    return prev
+  }
+
+  function _unwrap (obj, config, _cache) {
+    let isRoot = _cache == null
+    if (isRoot) {
+      _cache = [[obj]]
+    }
+
+    let result
+    let source = obj
+    if (isArray(source)) {
+      result = []
+      source.forEach((val, key) => {
+        _checkCacheAndUnwrap(config, _cache, val, result, key)
+      })
+    } else if (isPOJO(source)) {
+      result = {}
+      keys(source).forEach(key => {
+        const val = source[key]
+        _checkCacheAndUnwrap(config, _cache, val, result, key)
+      })
+    } else if (isWrappedData(source)) {
+      result = _unwrap(source(), config, _cache)
+    } else {
+      while (isWrapper(source)) {
+        source = source()
+      }
+      result = source
+    }
+    if (isRoot) {
+      _cache.forEach(v => {
+        if (isFunction(v[3])) {
+          v[3]()
+        }
+      })
+      if (isFunction(config.map)) result = config.map(result)
+    }
+    return result
+  }
+
   return source => {
     let root
     let _cache = null
@@ -238,7 +294,7 @@ function wrapData (wrapper, options = {}) {
 
     function getMany (
       pathMap,
-      mapFunc = defaultMapFunc
+      mapFunc = options.getMany.map || defaultMapFunc
     ) {
       const getValue = path => {
         return this.get(path, mapFunc)
@@ -409,59 +465,6 @@ function wrapData (wrapper, options = {}) {
 
     return root
   }
-}
-
-function _checkCacheAndUnwrap (config, _cache, val, result, key) {
-  const prev = _cache.find(v => v[0] === val)
-  if (prev != null) {
-    !config.json && prev.push(() => {
-      /* eslint-disable-next-line no-unused-vars */
-      const [_, r, k] = prev
-      result[key] = k == null ? r : r[k]
-    })
-  } else {
-    _cache.push([val, result, key])
-    result[key] = _unwrap(val, config, _cache)
-  }
-  return prev
-}
-
-function _unwrap (obj, config, _cache) {
-  let isRoot = _cache == null
-  if (isRoot) {
-    _cache = [[obj]]
-  }
-
-  let result
-  let source = obj
-  if (isArray(source)) {
-    result = []
-    source.forEach((val, key) => {
-      _checkCacheAndUnwrap(config, _cache, val, result, key)
-    })
-  } else if (isPOJO(source)) {
-    result = {}
-    keys(source).forEach(key => {
-      const val = source[key]
-      _checkCacheAndUnwrap(config, _cache, val, result, key)
-    })
-  } else if (isWrappedData(source)) {
-    result = _unwrap(source(), config, _cache)
-  } else {
-    while (isWrapper(source)) {
-      source = source()
-    }
-    result = source
-  }
-  if (isRoot) {
-    _cache.forEach(v => {
-      if (isFunction(v[3])) {
-        v[3]()
-      }
-    })
-    if (isFunction(config.map)) result = config.map(result)
-  }
-  return result
 }
 
 module.exports = wrapData
