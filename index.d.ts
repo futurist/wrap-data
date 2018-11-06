@@ -29,7 +29,7 @@ declare interface IChangeStreamValue {
 }
 
 declare interface IWrappedData extends Stream<any> {
-    root: IWrappedData;
+    root: IWrappedRoot;
     path: string[];
     slice(
         path: string | string[],
