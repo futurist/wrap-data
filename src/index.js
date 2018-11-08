@@ -182,6 +182,7 @@ function wrapData (wrapper, options = {}) {
         }
       }
       packed.change = _change
+      packed.MUTATION_TYPE = MUTATION_TYPE
       return packed
     }
 
@@ -217,7 +218,6 @@ function wrapData (wrapper, options = {}) {
       if (isRoot) {
         _cache = [[source, packed, null]]
         root = makeChange(packed)
-        root.MUTATION_TYPE = MUTATION_TYPE
       }
       let skip = root.change.skip()
       root.change.skip(true)
