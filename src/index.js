@@ -44,22 +44,23 @@ function getPathType (p) {
   return match != null ? ['array', match[1]] : ['', p]
 }
 
-const ignoreFirstCall = fn => {
-  let calledOnce = false
-  return function (arg) {
-    /* eslint-disable-next-line no-return-assign */
-    return calledOnce ? fn.call(this, arg) : calledOnce = true
-  }
-}
+// const ignoreFirstCall = fn => {
+//   let calledOnce = false
+//   return function (arg) {
+//     /* eslint-disable-next-line no-return-assign */
+//     return calledOnce ? fn.call(this, arg) : calledOnce = true
+//   }
+// }
 
 const defaultMapFunc = val => val != null ? val.unwrap() : val
 
-function wrapData (wrapper, options = {}) {
+function wrapData (WrapperClass, options = {}) {
   options.getMany = options.getMany || {}
 
-  let isWrapper = options.isWrapper || ((obj) => {
-    return isFunction(obj) && isFunction(obj.map)
-  })
+  let wrapper = (init) => new WrapperClass(init)
+  let isWrapper = (obj) => {
+    return obj instanceof WrapperClass
+  }
 
   function isWrappedData (obj) {
     return isWrapper(obj) &&
@@ -95,7 +96,9 @@ function wrapData (wrapper, options = {}) {
 
     let result
     let source = obj
-    if (isArray(source)) {
+    if (isWrappedData(source)) {
+      result = _unwrap(source.value, config, _cache)
+    } else if (isArray(source)) {
       result = []
       source.forEach((val, key) => {
         _checkCacheAndUnwrap(config, _cache, val, result, key)
@@ -106,11 +109,9 @@ function wrapData (wrapper, options = {}) {
         const val = source[key]
         _checkCacheAndUnwrap(config, _cache, val, result, key)
       })
-    } else if (isWrappedData(source)) {
-      result = _unwrap(source(), config, _cache)
     } else {
       while (isWrapper(source)) {
-        source = source()
+        source = source.value
       }
       result = source
     }
@@ -140,45 +141,47 @@ function wrapData (wrapper, options = {}) {
       if (!isFunction(filter)) {
         filter = (value) => value.path.join().indexOf(subPath.join()) === 0
       }
-      const _change = target.change.map(({ value, type, path }) => {
+      const disposer = target.change.map(({ value, type, path }) => {
         if (filter({ value, type, path })) {
-          change.emit(value, type, {
+          change.send(value, type, {
             path: value.path.slice(subPath.length)
           })
         }
       })
-      change.end.map(_change.end)
+      change.on('end', disposer)
       return part
     }
 
     function makeChange (packed) {
       if (!isWrapper(packed)) return packed
       const _change = wrapper()
-      const oldMap = _change.map
+      // const oldMap = _change.map
       let changeStack = []
       _change.count = 0
       _change.skip = wrapper()
       _change.hold = wrapper()
       _change.hold.map(val => {
         if (!val) {
-          changeStack.forEach(_change)
+          changeStack.forEach(v => {
+            _change.value = v
+          })
           changeStack = []
         }
       })
-      _change.map = function (fn) {
-        const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
-        return oldMap.call(this, _fn)
-      }
-      _change.emit = (value, type, data) => {
-        if (root.change.skip() || _change.skip()) return
+      // _change.map = function (fn) {
+      //   const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
+      //   return oldMap.call(this, _fn)
+      // }
+      _change.send = (value, type, data) => {
+        if (root.change.skip.value || _change.skip.value) return
         _change.count++
         if (data == null) {
           data = { path: value.path }
         }
-        if (_change.hold()) {
+        if (_change.hold.value) {
           changeStack.push(assign({ value, type }, data))
         } else {
-          _change(assign({ value, type }, data))
+          _change.value = (assign({ value, type }, data))
         }
       }
       packed.change = _change
@@ -191,8 +194,9 @@ function wrapData (wrapper, options = {}) {
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packed.root = root
       packed.path = path
-      packed.map(v => root.change.emit(packed, type))
-      type = MUTATION_TYPE.CHANGE
+      packed.map(v => root.change.send(packed, MUTATION_TYPE.CHANGE))
+      root.change.send(packed, type)
+      packed.wrap = wrapper
       packed.get = get
       packed.slice = slice
       packed.set = set
@@ -202,7 +206,7 @@ function wrapData (wrapper, options = {}) {
       packed.ensure = ensure
       packed.unset = unset
       packed.unwrap = unwrap
-      if (isArray(packed())) {
+      if (isArray(packed.value)) {
         packed.push = push
         packed.pop = pop
       }
@@ -219,17 +223,17 @@ function wrapData (wrapper, options = {}) {
         _cache = [[source, packed, null]]
         root = makeChange(packed)
       }
-      let skip = root.change.skip()
-      root.change.skip(true)
+      let skip = root.change.skip.value
+      root.change.skip.value = (true)
 
       if (isPrimitive2(source)) {
         packed = bindMethods(wrapper(source), prevPath)
-        root.change.skip(skip)
+        root.change.skip.value = (skip)
         return packed
       }
 
       const target = isArray(source) ? [] : isPOJO(source) ? {} : source
-      packed(deepIt(target, source, (a, b, key, path) => {
+      packed.value = (deepIt(target, source, (a, b, key, path) => {
         const _path = path.concat(key)
         const bval = b[key]
         if (bval === undefined) a[key] = wrapper()
@@ -262,7 +266,7 @@ function wrapData (wrapper, options = {}) {
           }
         })
       }
-      root.change.skip(skip)
+      root.change.skip.value = (skip)
       return ret
     }
 
@@ -321,7 +325,7 @@ function wrapData (wrapper, options = {}) {
         if (!isWrapper(n)) {
           break
         }
-        n = n()[path[i][1]]
+        n = n.value[path[i][1]]
       }
       return isFunction(mapFunc) ? mapFunc(n) : n
     }
@@ -372,10 +376,10 @@ function wrapData (wrapper, options = {}) {
 
       let value, action
       /* eslint-disable-next-line no-unused-vars */
-      let i; let len; let t; let nextT; let p; let n = obj()
+      let i; let len; let t; let nextT; let p; let n = obj.value
 
       if (!path.length) {
-        obj(createWrap(func(obj), obj.path.slice())())
+        obj.value = (createWrap(func(obj), obj.path.slice()).value)
         value = obj
         action = MUTATION_TYPE.CHANGE
       } else {
@@ -390,11 +394,11 @@ function wrapData (wrapper, options = {}) {
               MUTATION_TYPE.CREATE
             )
           }
-          n = n[p]()
+          n = n[p].value
         }
         [t, p] = path[i]
         if (isWrapper(n[p])) {
-          n[p](createWrap(func(n[p]), obj.path.concat(_path))())
+          n[p].value = (createWrap(func(n[p]), obj.path.concat(_path)).value)
           value = n[p]
           action = MUTATION_TYPE.CHANGE
         } else {
@@ -409,7 +413,7 @@ function wrapData (wrapper, options = {}) {
             Object.defineProperty(n, p, assign({ value }, descriptor))
           }
           action = MUTATION_TYPE.ADD
-          root.change.emit(value, action)
+          root.change.send(value, action)
         }
       }
 
@@ -424,27 +428,27 @@ function wrapData (wrapper, options = {}) {
       if (!isWrapper(obj) || !len) return
       let val = obj.get(path.slice(0, -1))
       if (val == null) return
-      let parent = val()
+      let parent = val.value
       /* eslint-disable-next-line no-unused-vars */
       let [t, p] = path[len - 1]
       if (!(p in parent)) return
       let deleteVal = parent[p]
       delete parent[p]
-      root.change.emit(deleteVal, MUTATION_TYPE.DELETE)
+      root.change.send(deleteVal, MUTATION_TYPE.DELETE)
       return isWrapper(deleteVal)
         ? deleteVal.unwrap()
         : deleteVal
     }
 
     function push (value) {
-      let len = this().length
+      let len = this.value.length
       return this.set(len, value)
     }
 
     function pop () {
-      let len = this().length
+      let len = this.value.length
       let val = this.unset(len - 1)
-      this().pop()
+      this.value.pop()
       return val
     }
 
@@ -468,3 +472,34 @@ function wrapData (wrapper, options = {}) {
 }
 
 module.exports = wrapData
+
+const EventEmitter = require('events')
+class Wrapper extends EventEmitter {
+  constructor (init) {
+    super()
+    this._value = init
+  }
+  get value () {
+    return this._value
+  }
+  set value (val) {
+    this._value = val
+    this.emit('change', val)
+  }
+  map (fn) {
+    this.on('change', fn)
+    return () => {
+      this.removeListener('change', fn)
+    }
+  }
+  end () {
+    this.removeAllListeners('change')
+    this.emit('end')
+  }
+}
+
+// var d = wrapData(Wrapper)
+// var c = d({ a: 1, b: { c: 2 } })
+// var x = c.get('a').map(v => console.log(111, v))
+// c.set('a', c.wrap(2))
+// console.log(c.unwrap(), c.value.b.value.c.value)

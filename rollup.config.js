@@ -8,7 +8,9 @@ export default [
     input: './src/index.js',
     plugins: [
       buble(),
-      resolve(),
+      resolve({
+        preferBuiltins: false
+      }),
       commonjs()
     ],
     output: [
@@ -20,7 +22,9 @@ export default [
   {
     input: './src/index.js',
     plugins: [
-      resolve(),
+      resolve({
+        preferBuiltins: false
+      }),
       commonjs()
     ],
     output: [

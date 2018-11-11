@@ -1,10 +1,40 @@
-const it = require('ospec')
-const flyd = require('flyd')
-const mithirlStream = flyd.stream // require('mithril-stream')
-const wrapData = require('../src')
+let it = require('ospec')
+let flyd = require('flyd')
+let mithirlStream = flyd.stream // require('mithril-stream')
+let wrapData = require('../src')
 
-const { keys } = Object
+let { keys } = Object
 function isStream (s) { return typeof s.map === 'function' }
+
+const EventEmitter = require('events')
+class Box extends EventEmitter {
+  constructor (init) {
+    super()
+    this._value = init
+  }
+  get value () {
+    return this._value
+  }
+  set value (val) {
+    this._value = val
+    this.emit('change', val)
+  }
+  map (fn) {
+    this.on('change', fn)
+    return () => {
+      this.removeListener('change', fn)
+    }
+  }
+  end () {
+    this.removeAllListeners('change')
+    this.emit('end')
+  }
+}
+
+const creator = (init) => {
+  return new Box(init)
+}
+mithirlStream = Box
 
 /* eslint no-redeclare: 0 */
 
@@ -12,33 +42,25 @@ it('mithril stream', () => {
   var w = wrapData(mithirlStream)
   var d = w({ a: 1, b: { c: 2 } })
   it(isStream(d)).equals(true)
-  it(keys(d())).deepEquals(['a', 'b'])
-  it(keys(d().b())).deepEquals(['c'])
-  it(isStream(d().b)).equals(true)
-  it(d().a()).equals(1)
-  it(typeof d().b()).equals('object')
-  it(d().b().c()).equals(2)
-  it(Object.keys(d.set({ b: 1 })())).deepEquals(['b'])
+  it(keys(d.value)).deepEquals(['a', 'b'])
+  it(keys(d.value.b.value)).deepEquals(['c'])
+  it(isStream(d.value.b)).equals(true)
+  it(d.value.a.value).equals(1)
+  it(typeof d.value.b.value).equals('object')
+  it(d.value.b.value.c.value).equals(2)
+  it(Object.keys(d.set({ b: 1 }).value)).deepEquals(['b'])
   it(d.set({ b: 1 }).unwrap()).deepEquals({ b: 1 })
 })
 
-it('flyd stream', () => {
-  var w = wrapData(flyd.stream)
+it('root test', () => {
+  var w = wrapData(mithirlStream)
   var d = w({ a: 1, b: { c: 2 } })
-  it(isStream(d)).equals(true)
-  it(keys(d())).deepEquals(['a', 'b'])
-  it(keys(d().b())).deepEquals(['c'])
-  it(isStream(d().b)).equals(true)
-  it(d().a()).equals(1)
-  it(typeof d().b()).equals('object')
-  it(d().b().c()).equals(2)
-
   it(d.root).equals(d)
-  it(d().b().c.root).equals(d)
+  it(d.value.b.value.c.root).equals(d)
 })
 
 it('root unwrap', () => {
-  var w = wrapData(flyd.stream)
+  var w = wrapData(mithirlStream)
   var data = { a: { b: { c: 2 } } }
   data.a.b.x = data.a
   var d = w(data)
@@ -52,12 +74,12 @@ it('root unwrap', () => {
 it('not dive into stream', () => {
   var d = wrapData(mithirlStream)({
     a: 1,
-    b: mithirlStream({
+    b: new Box({
       x: 2, y: 3
     })
   })
 
-  it(d().b()()).deepEquals({
+  it(d.value.b.value.value).deepEquals({
     x: 2,
     y: 3
   })
@@ -66,38 +88,38 @@ it('not dive into stream', () => {
 it('array test', () => {
   var spy = it.spy()
   var x = wrapData(mithirlStream)({ a: { b: [] } })
-  x().a(x().a()) // give it a change first to test map
+  x.value.a.value=(x.value.a.value) // give it a change first to test map
   x.change.map(spy)
 
-  var b = x().a().b
-  b([])
+  var b = x.value.a.value.b
+  b.value=([])
   it(spy.callCount).equals(1)
 
   b.set(0, { x: 1 })
   it(spy.callCount).equals(2)
-  it(b()[0]().x.path.join()).equals('a,b,0,x')
+  it(b.value[0].value.x.path.join()).equals('a,b,0,x')
 
   var val = b.push({ x: 2 })
   it(spy.callCount).equals(3)
   it(val.path.join()).equals('a,b,1')
-  it(val().x()).deepEquals(2)
-  it(b().length).equals(2)
+  it(val.value.x.value).deepEquals(2)
+  it(b.value.length).equals(2)
 
   var val = b.pop()
   it(spy.callCount).equals(4)
   it(val).deepEquals({ x: 2 })
-  it(b().length).equals(1)
+  it(b.value.length).equals(1)
 
   var val = b.pop()
   it(spy.callCount).equals(5)
   it(val).deepEquals({ x: 1 })
-  it(b().length).equals(0)
+  it(b.value.length).equals(0)
 
   var val = x.set('c.[0].xx', 10)
   it(spy.callCount).equals(8)
 
   var val = x.ensure('y.[0]', 10)
-  it(val()).equals(10)
+  it(val.value).equals(10)
   it(val.path.join()).equals('y,0')
   it(spy.callCount).equals(10)
 
@@ -114,9 +136,9 @@ it('array test', () => {
 
 it('single unwrap', () => {
   var spy = it.spy()
-  var x = wrapData(mithirlStream)({ a: { b: mithirlStream(10) } })
+  var x = wrapData(mithirlStream)({ a: { b: new Box(10) } })
   x.change.map(spy)
-  it(x().a.unwrap()).deepEquals({ b: 10 })
+  it(x.value.a.unwrap()).deepEquals({ b: 10 })
 })
 
 it('set test', () => {
@@ -130,7 +152,7 @@ it('set test', () => {
 
 it('object test', () => {
   var xa = {
-    i: mithirlStream(mithirlStream(99)),
+    i: new Box(new Box(99)),
     b: 1,
     v: 10,
     y: [3, 4, 5, 6]
@@ -160,17 +182,17 @@ it('object test', () => {
     }
   })
 
-  it(keys(d()).join()).equals('a')
-  it(keys(d().a()).join()).equals('i,b,v,y,c')
-  it(keys(d().a().c()).join()).equals('d')
-  it(d().a().i()()()).equals(99)
-  it(d().a().y().length).equals(4)
-  it(isStream(d().a().y()[0])).equals(true)
-  it(d().a().y()[0]()).equals(3)
-  it(d().a().c().d()).equals(3)
+  it(keys(d.value).join()).equals('a')
+  it(keys(d.value.a.value).join()).equals('i,b,v,y,c')
+  it(keys(d.value.a.value.c.value).join()).equals('d')
+  it(d.value.a.value.i.value.value.value).equals(99)
+  it(d.value.a.value.y.value.length).equals(4)
+  it(isStream(d.value.a.value.y.value[0])).equals(true)
+  it(d.value.a.value.y.value[0].value).equals(3)
+  it(d.value.a.value.c.value.d.value).equals(3)
 
   it(d.get('a.c.d').path.join()).equals('a,c,d')
-  it(d.get('a.c.d')()).equals(3)
+  it(d.get('a.c.d').value).equals(3)
 
   it(d.get('a.c.dddd')).equals(undefined)
   it(d.get('a.ccc.c')).equals(undefined)
@@ -181,15 +203,15 @@ it('object test', () => {
 
   d.set('a.x.y', 34)
   it(spy.callCount).equals(2)
-  it(spy.args[0].value()).deepEquals(34)
+  it(spy.args[0].value.value).deepEquals(34)
   it(spy.args[0].value.path.join()).deepEquals('a,x,y')
   it(spy.args[0].type).equals('add') // 1: ADD
 
-  d.set('a.x.f', mithirlStream(mithirlStream(35)))
+  d.set('a.x.f', new Box(new Box(35)))
   it(spy.callCount).equals(3)
 
-  it(d.get('a.x.y')()).equals(34)
-  it(d.get('a.x.f')()()()).equals(35)
+  it(d.get('a.x.y').value).equals(34)
+  it(d.get('a.x.f').value.value.value).equals(35)
 
   var ss = d.ensure('a.x.y', 234)
   it(spy.callCount).equals(3)
@@ -215,7 +237,7 @@ it('object test', () => {
   // success ensured set
   var xy = d.ensure('a.x.z', 234)
   it(spy.callCount).equals(5)
-  it(xy()).equals(234)
+  it(xy.value).equals(234)
 
   d.set('a.x.y', 199)
   it(spy.callCount).equals(6)
@@ -231,15 +253,15 @@ it('object test', () => {
   d.set('a.x.y', { xx: 2 })
   it(spy.callCount).equals(8)
   it(d.get('a.x.y.xx').path.join()).equals('a,x,y,xx')
-  it(d.get('a.x.y.xx')()).equals(2)
-  it(d().a().x().y().xx()).equals(2)
+  it(d.get('a.x.y.xx').value).equals(2)
+  it(d.value.a.value.x.value.y.value.xx.value).equals(2)
 
   d.set('a.y.4', { yy: { zz: 234 } })
   it(spy.callCount).equals(9)
-  it(d.get('a.y')().length).equals(5)
+  it(d.get('a.y').value.length).equals(5)
   it(d.get('a.y.4.yy').path.join()).equals('a,y,4,yy')
   it(d.get('a.y.4.yy.zz').path.join()).equals('a,y,4,yy,zz')
-  it(d.get('a.y.4.yy.zz')()).equals(234)
+  it(d.get('a.y.4.yy.zz').value).equals(234)
 
   d.unset('a.y.3')
   it(spy.callCount).equals(10)
@@ -247,8 +269,8 @@ it('object test', () => {
   d.get('a.i').set(10)
   it(spy.callCount).equals(11)
   it(spy.args[0].type).equals('change')
-  it(d().a().i()).equals(10)
-  it(d().a().i.path.join()).equals('a,i')
+  it(d.value.a.value.i.value).equals(10)
+  it(d.value.a.value.i.path.join()).equals('a,i')
 
   var y = [ 3, 4, 5, null, { yy: { zz: 234 } } ]
   delete y[3]
@@ -280,12 +302,12 @@ it('circle object test', () => {
   d.change.map(spy)
   it(spy.callCount).equals(0)
 
-  it(keys(d()).join()).equals('a')
-  it(keys(d().a()).join()).equals('b,y,a,c')
-  it((d().a().c().c().c().b.path).join()).equals('a,b')
-  it(keys(d().a().c().c().c().b()).join()).equals('d')
-  it(d().a().y()[3]().d.path.join()).equals('a,b,d')
-  it(keys(d().a().y()[3]()).join()).equals('d')
+  it(keys(d.value).join()).equals('a')
+  it(keys(d.value.a.value).join()).equals('b,y,a,c')
+  it((d.value.a.value.c.value.c.value.c.value.b.path).join()).equals('a,b')
+  it(keys(d.value.a.value.c.value.c.value.c.value.b.value).join()).equals('d')
+  it(d.value.a.value.y.value[3].value.d.path.join()).equals('a,b,d')
+  it(keys(d.value.a.value.y.value[3].value).join()).equals('d')
 
   var r = (d.unwrap())
   it(r.a.c).equals(r.a)
@@ -293,7 +315,7 @@ it('circle object test', () => {
   it(r.a.y[3]).equals(r.a.b)
 
   // below recursive will be removed for json
-  d().x = d().a
+  d.value.x = d.value.a
 
   var json = d.unwrap({ json: true })
   it(json).deepEquals({ a: { b: { d: 1 }, y: [ 3, 4, 5 ] } })
@@ -306,10 +328,10 @@ it('ensure', () => {
   })
   var a = d.ensure('a', 10)
   it(a.unwrap()).equals(1)
-  it(d.ensure('x', 10)()).equals(10)
-  it(d.ensure(val => val() < 10, 'a', 10)()).equals(10)
-  it(d.ensure(val => val() < 10, 'a', 100)()).equals(10)
-  it(d.ensure(val => val() < 5, 'a', 10)()).equals(10)
+  it(d.ensure('x', 10).value).equals(10)
+  it(d.ensure(val => val.value < 10, 'a', 10).value).equals(10)
+  it(d.ensure(val => val.value < 10, 'a', 100).value).equals(10)
+  it(d.ensure(val => val.value < 5, 'a', 10).value).equals(10)
 })
 
 it('getset', () => {
@@ -320,7 +342,7 @@ it('getset', () => {
   })
   d.change.map(spy)
   var r = d.getset('b.c', v => {
-    return v() + 1
+    return v.value + 1
   })
   it(spy.callCount).equals(1)
   it(r.unwrap()).equals(3)
@@ -334,7 +356,7 @@ it('getset', () => {
   it(r.unwrap()).deepEquals({ y: 3 })
 
   var x = d.get('b.c')
-  var r = x.getset(v => v() + 1)
+  var r = x.getset(v => v.value + 1)
   it(r.unwrap()).equals(4)
 })
 
@@ -352,7 +374,7 @@ it('set descriptor', () => {
   // test set, then get
   d.set('b.x', 4)
   r = d.get('b.x')
-  it(r()).equals(4)
+  it(r.value).equals(4)
 
   d.ensure('b.y', 10, {})
   d.ensure('b.z', 10, { enumerable: true })
@@ -390,8 +412,8 @@ it('model slice', () => {
   d.set('a', 2)
   it(spy.callCount).equals(3)
   // end bc.change
-  bc.change.end(true)
-  bc(4)
+  bc.change.end()
+  bc.value=(4)
   it(spy.callCount).equals(4)
   it(d.get('a').change).equals(undefined)
   it(isStream(d.get('b').change)).equals(true)
@@ -412,13 +434,13 @@ it('multiple slice', () => {
   // all 2 change stream emit
   it(spy.callCount).equals(2)
   // stop 1 not effect 2
-  s1.end(true)
+  s1(true)
   d.set('b.c', 11)
   it(spy.callCount).equals(3)
-  s2.end(true)
+  s2(true)
   d.set('b.c', 12)
   it(spy.callCount).equals(3)
-  it(typeof d.change.emit).equals('function')
+  it(typeof d.change.send).equals('function')
 })
 
 it('nested getset', () => {
@@ -430,10 +452,10 @@ it('nested getset', () => {
   })
   var air = d.slice('air')
   air.change.map(spy)
-  air.getset('value', v => v() + 1)
+  air.getset('value', v => v.value + 1)
   it(spy.callCount).equals(1)
   air.getset('unit', v => {
-    air.getset('value', v => v() * 2)
+    air.getset('value', v => v.value * 2)
     return 'C'
   })
   it(spy.callCount).equals(3)
@@ -452,7 +474,7 @@ it('add intermediate object when set', () => {
     const [_type, _path, _value] = results.shift()
     it(type).deepEquals(_type)
     it(path).deepEquals(_path)
-    it(value()).deepEquals(_value)
+    it(value.value).deepEquals(_value)
   })
   d.set('a.b.c', 10)
   d.set('a', 1)
@@ -480,7 +502,7 @@ it('setMany', () => {
     a: { b: 1 },
     x: 2
   })
-  it(d().y()).deepEquals(3)
+  it(d.value.y.value).deepEquals(3)
   const r = d.setMany({
     x: 10, y: 20
   })
@@ -531,16 +553,16 @@ it('hold change', () => {
   })
   var d = root.slice('a')
   d.change.map(spy)
-  d.change.hold(true)
+  d.change.hold.value=(true)
   d.set('x', 3)
   it(spy.callCount).equals(0)
-  d.change.skip(true)
+  d.change.skip.value=(true)
   d.set('x', 4)
-  d.change.skip(false)
+  d.change.skip.value=(false)
   it(spy.callCount).equals(0)
   d.set('y', 5)
   it(spy.callCount).equals(0)
-  d.change.hold(false)
+  d.change.hold.value=(false)
   it(spy.callCount).equals(2)
 })
 
@@ -552,14 +574,14 @@ it('skip change', () => {
   })
   // d = d.slice('a')
   d.change.map(spy)
-  d.change.skip(true)
+  d.change.skip.value=(true)
   d.set('x', 3)
   it(spy.callCount).equals(0)
   d.set('x', 4)
   it(spy.callCount).equals(0)
   d.set('y', 5)
   it(spy.callCount).equals(0)
-  d.change.skip(false)
+  d.change.skip.value=(false)
   it(spy.callCount).equals(0)
 })
 
@@ -606,7 +628,7 @@ it('unwrap map', () => {
     }
   )({
     store: {
-      [c.displayName]: mithirlStream(c.store)
+      [c.displayName]: new Box(c.store)
     },
     api: {
       getOdps: {
@@ -634,7 +656,7 @@ it('options.extend', () => {
     {
       extend: obj => {
         obj.add = function (n) {
-          this(this() + n)
+          this.value=(this.value + n)
         }
       }
     }
