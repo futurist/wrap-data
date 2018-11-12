@@ -54,9 +54,12 @@ function getPathType (p) {
 
 const defaultMapFunc = val => val != null ? val.unwrap() : val
 
-function wrapData (WrapperClass, options = {}) {
-  options.getMany = options.getMany || {}
-
+function wrapData ({
+  WrapperClass = DefaultWrapper,
+  getManyMap = defaultMapFunc,
+  getUnwrapConfig = null,
+  addMethods = []
+} = {}) {
   let wrapper = (init) => new WrapperClass(init)
   let isWrapper = (obj) => {
     return obj instanceof WrapperClass
@@ -210,9 +213,9 @@ function wrapData (WrapperClass, options = {}) {
         packed.push = push
         packed.pop = pop
       }
-      if (isFunction(options.extend)) {
-        options.extend(packed)
-      }
+      addMethods.forEach(plugin => {
+        plugin(packed)
+      })
       return packed
     }
 
@@ -298,7 +301,7 @@ function wrapData (WrapperClass, options = {}) {
 
     function getMany (
       pathMap,
-      mapFunc = options.getMany.map || defaultMapFunc
+      mapFunc = getManyMap || defaultMapFunc
     ) {
       const getValue = path => {
         return this.get(path, mapFunc)
@@ -462,7 +465,7 @@ function wrapData (WrapperClass, options = {}) {
         : this
       return _unwrap(obj, Object.assign(
         {},
-        isFunction(options.unwrap) && options.unwrap(obj),
+        isFunction(getUnwrapConfig) && getUnwrapConfig(obj),
         config
       ))
     }
@@ -471,10 +474,8 @@ function wrapData (WrapperClass, options = {}) {
   }
 }
 
-module.exports = wrapData
-
 const EventEmitter = require('events')
-class Wrapper extends EventEmitter {
+class DefaultWrapper extends EventEmitter {
   constructor (init) {
     super()
     this._value = init
@@ -497,6 +498,9 @@ class Wrapper extends EventEmitter {
     this.emit('end')
   }
 }
+wrapData.DefaultWrapper = DefaultWrapper
+
+module.exports = wrapData
 
 // var d = wrapData(Wrapper)
 // var c = d({ a: 1, b: { c: 2 } })

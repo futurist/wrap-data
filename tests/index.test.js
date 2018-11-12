@@ -1,45 +1,13 @@
 let it = require('ospec')
-let flyd = require('flyd')
-let mithirlStream = flyd.stream // require('mithril-stream')
 let wrapData = require('../src')
-
+let { DefaultWrapper } = wrapData
 let { keys } = Object
-function isStream (s) { return typeof s.map === 'function' }
-
-const EventEmitter = require('events')
-class Box extends EventEmitter {
-  constructor (init) {
-    super()
-    this._value = init
-  }
-  get value () {
-    return this._value
-  }
-  set value (val) {
-    this._value = val
-    this.emit('change', val)
-  }
-  map (fn) {
-    this.on('change', fn)
-    return () => {
-      this.removeListener('change', fn)
-    }
-  }
-  end () {
-    this.removeAllListeners('change')
-    this.emit('end')
-  }
-}
-
-const creator = (init) => {
-  return new Box(init)
-}
-mithirlStream = Box
+function isStream (s) { return s instanceof DefaultWrapper }
 
 /* eslint no-redeclare: 0 */
 
 it('mithril stream', () => {
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({ a: 1, b: { c: 2 } })
   it(isStream(d)).equals(true)
   it(keys(d.value)).deepEquals(['a', 'b'])
@@ -53,14 +21,14 @@ it('mithril stream', () => {
 })
 
 it('root test', () => {
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({ a: 1, b: { c: 2 } })
   it(d.root).equals(d)
   it(d.value.b.value.c.root).equals(d)
 })
 
 it('root unwrap', () => {
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var data = { a: { b: { c: 2 } } }
   data.a.b.x = data.a
   var d = w(data)
@@ -72,9 +40,9 @@ it('root unwrap', () => {
 })
 
 it('not dive into stream', () => {
-  var d = wrapData(mithirlStream)({
+  var d = wrapData(DefaultWrapper)({
     a: 1,
-    b: new Box({
+    b: new DefaultWrapper({
       x: 2, y: 3
     })
   })
@@ -87,12 +55,12 @@ it('not dive into stream', () => {
 
 it('array test', () => {
   var spy = it.spy()
-  var x = wrapData(mithirlStream)({ a: { b: [] } })
-  x.value.a.value=(x.value.a.value) // give it a change first to test map
+  var x = wrapData(DefaultWrapper)({ a: { b: [] } })
+  x.value.a.value = (x.value.a.value) // give it a change first to test map
   x.change.map(spy)
 
   var b = x.value.a.value.b
-  b.value=([])
+  b.value = ([])
   it(spy.callCount).equals(1)
 
   b.set(0, { x: 1 })
@@ -136,14 +104,14 @@ it('array test', () => {
 
 it('single unwrap', () => {
   var spy = it.spy()
-  var x = wrapData(mithirlStream)({ a: { b: new Box(10) } })
+  var x = wrapData(DefaultWrapper)({ a: { b: new DefaultWrapper(10) } })
   x.change.map(spy)
   it(x.value.a.unwrap()).deepEquals({ b: 10 })
 })
 
 it('set test', () => {
   var spy = it.spy()
-  var d = wrapData(mithirlStream)({})
+  var d = wrapData(DefaultWrapper)({})
   d.change.map(spy)
   it(spy.callCount).equals(0)
   d.ensure('x.y.z', 10)
@@ -152,7 +120,7 @@ it('set test', () => {
 
 it('object test', () => {
   var xa = {
-    i: new Box(new Box(99)),
+    i: new DefaultWrapper(new DefaultWrapper(99)),
     b: 1,
     v: 10,
     y: [3, 4, 5, 6]
@@ -165,7 +133,7 @@ it('object test', () => {
   }
 
   var spy = it.spy()
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w(x)
   d.change.map(spy)
   it(spy.callCount).equals(0)
@@ -207,7 +175,7 @@ it('object test', () => {
   it(spy.args[0].value.path.join()).deepEquals('a,x,y')
   it(spy.args[0].type).equals('add') // 1: ADD
 
-  d.set('a.x.f', new Box(new Box(35)))
+  d.set('a.x.f', new DefaultWrapper(new DefaultWrapper(35)))
   it(spy.callCount).equals(3)
 
   it(d.get('a.x.y').value).equals(34)
@@ -297,7 +265,7 @@ it('circle object test', () => {
   xa.a = x
 
   var spy = it.spy()
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w(x)
   d.change.map(spy)
   it(spy.callCount).equals(0)
@@ -322,7 +290,7 @@ it('circle object test', () => {
 })
 
 it('ensure', () => {
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({
     a: 1, b: { c: 2 }
   })
@@ -336,7 +304,7 @@ it('ensure', () => {
 
 it('getset', () => {
   var spy = it.spy()
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({
     a: 1, b: { c: 2 }
   })
@@ -362,7 +330,7 @@ it('getset', () => {
 
 it('set descriptor', () => {
   var spy = it.spy()
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({
     a: 1, b: { c: 2 }
   })
@@ -388,7 +356,7 @@ it('set descriptor', () => {
 
 it('model slice', () => {
   var spy = it.spy()
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({
     a: 1, b: { c: 2 }
   })
@@ -413,7 +381,7 @@ it('model slice', () => {
   it(spy.callCount).equals(3)
   // end bc.change
   bc.change.end()
-  bc.value=(4)
+  bc.value = (4)
   it(spy.callCount).equals(4)
   it(d.get('a').change).equals(undefined)
   it(isStream(d.get('b').change)).equals(true)
@@ -421,7 +389,7 @@ it('model slice', () => {
 
 it('multiple slice', () => {
   var spy = it.spy()
-  var w = wrapData(mithirlStream)
+  var w = wrapData(DefaultWrapper)
   var d = w({
     a: 1, b: { c: 2 }
   })
@@ -445,7 +413,7 @@ it('multiple slice', () => {
 
 it('nested getset', () => {
   var spy = it.spy()
-  var d = wrapData(mithirlStream)({
+  var d = wrapData(DefaultWrapper)({
     air: {
       value: 23, unit: 'F'
     }
@@ -469,7 +437,7 @@ it('add intermediate object when set', () => {
     ['change', ['a'], 1],
     ['change', ['a'], 2]
   ]
-  var d = wrapData(mithirlStream)({})
+  var d = wrapData(DefaultWrapper)({})
   d.change.map(({ type, path, value }) => {
     const [_type, _path, _value] = results.shift()
     it(type).deepEquals(_type)
@@ -482,7 +450,7 @@ it('add intermediate object when set', () => {
 })
 
 it('setMany', () => {
-  var d = wrapData(mithirlStream)({})
+  var d = wrapData(DefaultWrapper)({})
   d.setMany({
     'a.b': 1,
     'x': 2
@@ -511,7 +479,7 @@ it('setMany', () => {
 })
 
 it('getMany', () => {
-  var d = wrapData(mithirlStream)({
+  var d = wrapData(DefaultWrapper)({
     a: { b: 1 },
     x: 2
   })
@@ -537,7 +505,7 @@ it('getMany', () => {
 })
 
 it('get with mapFunc', () => {
-  var d = wrapData(mithirlStream)({
+  var d = wrapData(DefaultWrapper)({
     a: { b: 1 },
     x: 2
   })
@@ -547,41 +515,41 @@ it('get with mapFunc', () => {
 
 it('hold change', () => {
   var spy = it.spy()
-  var root = wrapData(mithirlStream)({
+  var root = wrapData(DefaultWrapper)({
     a: { b: 1 },
     x: 2
   })
   var d = root.slice('a')
   d.change.map(spy)
-  d.change.hold.value=(true)
+  d.change.hold.value = (true)
   d.set('x', 3)
   it(spy.callCount).equals(0)
-  d.change.skip.value=(true)
+  d.change.skip.value = (true)
   d.set('x', 4)
-  d.change.skip.value=(false)
+  d.change.skip.value = (false)
   it(spy.callCount).equals(0)
   d.set('y', 5)
   it(spy.callCount).equals(0)
-  d.change.hold.value=(false)
+  d.change.hold.value = (false)
   it(spy.callCount).equals(2)
 })
 
 it('skip change', () => {
   var spy = it.spy()
-  var d = wrapData(mithirlStream)({
+  var d = wrapData(DefaultWrapper)({
     a: { b: 1 },
     x: 2
   })
   // d = d.slice('a')
   d.change.map(spy)
-  d.change.skip.value=(true)
+  d.change.skip.value = (true)
   d.set('x', 3)
   it(spy.callCount).equals(0)
   d.set('x', 4)
   it(spy.callCount).equals(0)
   d.set('y', 5)
   it(spy.callCount).equals(0)
-  d.change.skip.value=(false)
+  d.change.skip.value = (false)
   it(spy.callCount).equals(0)
 })
 
@@ -604,9 +572,8 @@ it('unwrap map', () => {
   }
 
   const d = wrapData(
-    mithirlStream,
     {
-      unwrap: packer => {
+      getUnwrapConfig: packer => {
         // console.log(obj.path)
         const { path } = packer || {}
         if (packer && /api/.test(path)) {
@@ -628,7 +595,7 @@ it('unwrap map', () => {
     }
   )({
     store: {
-      [c.displayName]: new Box(c.store)
+      [c.displayName]: new DefaultWrapper(c.store)
     },
     api: {
       getOdps: {
@@ -650,15 +617,16 @@ it('unwrap map', () => {
   })
 })
 
-it('options.extend', () => {
+it('options.addMethods', () => {
   const d = wrapData(
-    mithirlStream,
     {
-      extend: obj => {
-        obj.add = function (n) {
-          this.value=(this.value + n)
+      addMethods: [
+        obj => {
+          obj.add = function (n) {
+            this.value = (this.value + n)
+          }
         }
-      }
+      ]
     }
   )({ x: 1 })
   d.get('x').add(2)
