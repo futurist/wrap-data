@@ -30,6 +30,21 @@ export default [
     output: [
       { format: 'es', file: 'dist/index.es.js' }
     ]
+  },
+
+  {
+    input: './src/index.js',
+    plugins: [
+      buble(),
+      resolve({
+        preferBuiltins: true
+      }),
+      commonjs()
+    ],
+    external: [ 'events' ],
+    output: [
+      { format: 'cjs', file: 'dist/index.nodejs.js' }
+    ]
   }
 
 ]
