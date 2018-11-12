@@ -56,7 +56,7 @@ it('not dive into stream', () => {
 it('array test', () => {
   var spy = it.spy()
   var x = wrapData(DefaultWrapper)({ a: { b: [] } })
-  x.value.a.value = (x.value.a.value) // give it a change first to test map
+  // x.value.a.value = (x.value.a.value) // give it a change first to test map
   x.change.map(spy)
 
   var b = x.value.a.value.b
@@ -631,6 +631,22 @@ it('options.addMethods', () => {
   )({ x: 1 })
   d.get('x').add(2)
   it(d.unwrap('x')).equals(3)
+})
+
+it('should not dig into non-Array/POJO', () => {
+  class MyClass {
+    constructor () {
+      this.abc = {
+        x: 1
+      }
+    }
+  }
+  const d = wrapData()({
+    x: 1,
+    b: new MyClass()
+  })
+  it(d.value.b.value.constructor).equals(MyClass)
+  it(d.value.b.value.abc.x).equals(1)
 })
 
 // run if not from cli
