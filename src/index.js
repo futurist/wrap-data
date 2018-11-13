@@ -72,6 +72,10 @@ function wrapData (wrapper, options = {}) {
     return isPrimitive(val) || isWrapper(val)
   }
 
+  function shouldNotDig (val) {
+    return isPrimitive2(val) || !(isArray(val) || isPOJO(val))
+  }
+
   function _checkCacheAndUnwrap (config, _cache, val, result, key) {
     const prev = _cache.find(v => v[0] === val)
     if (prev != null) {
@@ -222,7 +226,7 @@ function wrapData (wrapper, options = {}) {
       let skip = root.change.skip()
       root.change.skip(true)
 
-      if (isPrimitive2(source)) {
+      if (shouldNotDig(source)) {
         packed = bindMethods(wrapper(source), prevPath)
         root.change.skip(skip)
         return packed
@@ -233,7 +237,7 @@ function wrapData (wrapper, options = {}) {
         const _path = path.concat(key)
         const bval = b[key]
         if (bval === undefined) a[key] = wrapper()
-        else if (isPrimitive2(bval)) a[key] = wrapper(bval)
+        else if (shouldNotDig(bval)) a[key] = wrapper(bval)
         else {
           const prev = _cache.find(function (v) { return v[0] === bval })
           if (prev == null) {
@@ -269,7 +273,7 @@ function wrapData (wrapper, options = {}) {
     function deepIt (a, b, callback, path) {
       _cache = isArray(_cache) ? _cache : []
       path = isArray(path) ? path : []
-      if (isPrimitive2(b)) return bindMethods(wrapper(a), path)
+      if (shouldNotDig(b)) return bindMethods(wrapper(a), path)
       for (let key in b) {
         if (!hasOwnProperty.call(b, key)) continue
         // return false stop the iteration

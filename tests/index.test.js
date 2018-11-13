@@ -643,6 +643,17 @@ it('options.extend', () => {
   it(d.unwrap('x')).equals(3)
 })
 
+it('shouldNotDig', () => {
+  class MyClass {
+    constructor () {
+      this.abc = { x: 1 }
+    }
+  }
+  const d = wrapData(mithirlStream)({ a: new MyClass() })
+  it(d().a() instanceof MyClass).equals(true)
+  it(d().a().abc.x).equals(1)
+})
+
 // run if not from cli
 if (require.main === module) {
   it.run()
