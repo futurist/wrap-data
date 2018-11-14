@@ -60,6 +60,48 @@ function wrapData ({
   getUnwrapConfig = null,
   addMethods = []
 } = {}) {
+  class ChangeClass extends WrapperClass {
+    constructor (packed) {
+      super()
+      this.changeStack = []
+      this._packed = packed
+      this.count = 0
+    }
+    get skip () {
+      return this._skip
+    }
+    set skip (_skip) {
+      this._skip = _skip
+      this.emit('skip', _skip)
+    }
+    get hold () {
+      return this._hold
+    }
+    set hold (_hold) {
+      this._hold = _hold
+      if (!_hold) {
+        this.changeStack.forEach(v => {
+          this.value = v
+        })
+        this.changeStack = []
+      }
+      this.emit('hold', _hold)
+    }
+    set value ({ value, type, data }) {
+      const { root } = this._packed
+      if (!root || root.change.skip || this.skip) return
+      this.count++
+      if (data == null) {
+        data = { path: value.path }
+      }
+      if (this.hold) {
+        this.changeStack.push(assign({ value, type }, data))
+      } else {
+        this._value = (assign({ value, type }, data))
+        this.emit('change', this._value)
+      }
+    }
+  }
   let wrapper = (init) => new WrapperClass(init)
   let isWrapper = (obj) => {
     return obj instanceof WrapperClass
@@ -150,9 +192,13 @@ function wrapData ({
       }
       const disposer = target.change.map(({ value, type, path }) => {
         if (filter({ value, type, path })) {
-          change.send(value, type, {
-            path: value.path.slice(subPath.length)
-          })
+          change.value = {
+            value,
+            type,
+            data: {
+              path: value.path.slice(subPath.length)
+            }
+          }
         }
       })
       change.on('end', disposer)
@@ -161,36 +207,12 @@ function wrapData ({
 
     function makeChange (packed) {
       if (!isWrapper(packed)) return packed
-      const _change = wrapper()
+      const _change = new ChangeClass(packed)
       // const oldMap = _change.map
-      let changeStack = []
-      _change.count = 0
-      _change.skip = wrapper()
-      _change.hold = wrapper()
-      _change.hold.map(val => {
-        if (!val) {
-          changeStack.forEach(v => {
-            _change.value = v
-          })
-          changeStack = []
-        }
-      })
       // _change.map = function (fn) {
       //   const _fn = _change.count > 0 ? ignoreFirstCall(fn) : fn
       //   return oldMap.call(this, _fn)
       // }
-      _change.send = (value, type, data) => {
-        if (root.change.skip.value || _change.skip.value) return
-        _change.count++
-        if (data == null) {
-          data = { path: value.path }
-        }
-        if (_change.hold.value) {
-          changeStack.push(assign({ value, type }, data))
-        } else {
-          _change.value = (assign({ value, type }, data))
-        }
-      }
       packed.change = _change
       packed.MUTATION_TYPE = MUTATION_TYPE
       return packed
@@ -201,8 +223,13 @@ function wrapData ({
       // type: 0->CHANGE, 1->ADD, 2->DELETE
       packed.root = root
       packed.path = path
-      packed.map(v => root.change.send(packed, MUTATION_TYPE.CHANGE))
-      root.change.send(packed, type)
+      packed.map(v => {
+        root.change.value = ({ value: packed, type: MUTATION_TYPE.CHANGE })
+      })
+      root.change.value = {
+        value: packed,
+        type
+      }
       packed.wrap = wrapper
       packed.get = get
       packed.slice = slice
@@ -230,12 +257,12 @@ function wrapData ({
         _cache = [[source, packed, null]]
         root = makeChange(packed)
       }
-      let skip = root.change.skip.value
-      root.change.skip.value = (true)
+      let skip = root.change.skip
+      root.change.skip = (true)
 
       if (shouldNotDig(source)) {
         packed = bindMethods(wrapper(source), prevPath)
-        root.change.skip.value = (skip)
+        root.change.skip = (skip)
         return packed
       }
 
@@ -273,7 +300,7 @@ function wrapData ({
           }
         })
       }
-      root.change.skip.value = (skip)
+      root.change.skip = (skip)
       return ret
     }
 
@@ -420,7 +447,10 @@ function wrapData ({
             Object.defineProperty(n, p, assign({ value }, descriptor))
           }
           action = MUTATION_TYPE.ADD
-          root.change.send(value, action)
+          root.change.value = {
+            value,
+            type: action
+          }
         }
       }
 
@@ -441,7 +471,10 @@ function wrapData ({
       if (!(p in parent)) return
       let deleteVal = parent[p]
       delete parent[p]
-      root.change.send(deleteVal, MUTATION_TYPE.DELETE)
+      root.change.value = {
+        value: deleteVal,
+        type: MUTATION_TYPE.DELETE
+      }
       return isWrapper(deleteVal)
         ? deleteVal.unwrap()
         : deleteVal
