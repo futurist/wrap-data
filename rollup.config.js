@@ -14,8 +14,8 @@ export default [
       commonjs()
     ],
     output: [
-      { format: 'cjs', file: 'dist/index.cjs.js' },
-      { format: 'umd', file: 'dist/index.umd.js', name: 'wrapData' }
+      { format: 'cjs', file: 'dist/cjs.js' },
+      { format: 'umd', file: 'dist/umd.js', name: 'wrapData' }
     ]
   },
 
@@ -28,7 +28,7 @@ export default [
       commonjs()
     ],
     output: [
-      { format: 'es', file: 'dist/index.es.js' }
+      { format: 'es', file: 'dist/es.js' }
     ]
   },
 
@@ -43,7 +43,7 @@ export default [
     ],
     external: [ 'events' ],
     output: [
-      { format: 'cjs', file: 'dist/index.nodejs.js' }
+      { format: 'cjs', file: 'dist/node.js' }
     ]
   }
 

@@ -2,9 +2,9 @@
   "name": "wrap-data",
   "version": "0.7.2",
   "description": "wrap-data",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "browser": "dist/index.umd.js",
+  "main": "dist/cjs.js",
+  "module": "dist/es.js",
+  "browser": "dist/umd.js",
   "scripts": {
     "lint": "eslint src tests",
     "test": "npm run lint && ospec",
