@@ -654,6 +654,13 @@ it('shouldNotDig', () => {
   it(d().a().abc.x).equals(1)
 })
 
+it('big json', () => {
+  var d = wrapData(mithirlStream)(require('./big.json'))
+  console.time('big_json')
+  d.unwrap()
+  console.timeEnd('big_json')
+})
+
 // run if not from cli
 if (require.main === module) {
   it.run()
