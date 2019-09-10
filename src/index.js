@@ -303,7 +303,7 @@ function wrapData (wrapper) {
       return val
     }
 
-    function unwrap (path, config = {}) {
+    function unwrap (path, config = { json: true }) {
       if (arguments.length === 1 && isPOJO(path)) {
         config = path
         path = null
@@ -316,14 +316,16 @@ function wrapData (wrapper) {
 }
 
 function _checkCacheAndUnwrap (config, _cache, val, result, key) {
-  const prev = _cache.find(v => v[0] === val)
-  if (prev != null) {
-    !config.json && prev.push(() => {
+  const isJS = !config.json
+  const prev = isJS && _cache.find(v => v[0] === val)
+  if (prev) {
+    prev.push(() => {
+    /* eslint-disable-next-line no-unused-vars */
       const [_, r, k] = prev
       result[key] = k == null ? r : r[k]
     })
   } else {
-    _cache.push([val, result, key])
+    isJS && _cache.push([val, result, key])
     result[key] = _unwrap(val, config, _cache)
   }
   return prev
